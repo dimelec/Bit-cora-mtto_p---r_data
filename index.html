@@ -1,71 +1,153 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Bitácora Preventiva</title>
-<style>
-  :root{
-    --bg:#0d0f14; --card:#191c24; --card2:#212531; --line:#2d3340;
-    --text:#f0f1f5; --sub:#9aa0ad; --accent:#f97316; --good:#22c55e;
-    --warn:#f59e0b; --bad:#ef4444; --radius:14px;
-  }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  body{margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; padding-bottom:40px;}
-  .screen{display:none; padding:16px; max-width:480px; margin:0 auto;}
-  .screen.active{display:block;}
-  h1{font-size:18px; margin:0 0 4px;}
-  h2{font-size:15px; color:var(--sub); margin:0 0 16px; font-weight:500;}
-  .card{background:var(--card); border-radius:var(--radius); padding:16px; margin-bottom:14px; border:1px solid var(--line);}
-  label{display:block; font-size:13px; color:var(--sub); margin:12px 0 6px;}
-  label:first-child{margin-top:0;}
-  input[type=text], input[type=number], select{
-    width:100%; padding:12px; border-radius:10px; border:1px solid var(--line);
-    background:var(--card2); color:var(--text); font-size:16px;
-  }
-  input:focus, select:focus{outline:none; border-color:var(--accent);}
-  .hint{font-size:12px; color:var(--sub); margin-top:4px;}
-  .hint.auto{color:var(--good);}
-  .hint.error{color:var(--bad);}
-  .btn{width:100%; padding:14px; border-radius:10px; font-size:15px; font-weight:600; background:var(--accent); color:#fff; margin-top:16px; border:none; cursor:pointer; font-family:inherit;}
-  .btn:disabled{opacity:.35; cursor:not-allowed;}
-  .btn.secondary{background:var(--card2); color:var(--text); border:1px solid var(--line);}
-  .btn.danger{background:var(--bad);}
-  .toggle2{display:flex; gap:10px; margin-top:6px;}
-  .toggle2 button{flex:1; padding:14px; border-radius:10px; background:var(--card2); color:var(--text); border:1px solid var(--line); font-size:15px; font-weight:600; cursor:pointer;}
-  .toggle2 button.sel{background:var(--accent); border-color:var(--accent); color:#fff;}
-  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;}
-  .chip{padding:10px 14px; border-radius:20px; background:var(--card2); border:1px solid var(--line); color:var(--text); font-size:14px; font-weight:500; cursor:pointer;}
-  .chip.active{background:var(--accent); border-color:var(--accent); color:#fff;}
-  .ring-wrap{display:flex; flex-direction:column; align-items:center; padding:10px 0 6px;}
-  svg.ring{width:170px; height:170px;}
-  .ring-center{position:relative; margin-top:-125px; width:170px; text-align:center; pointer-events:none;}
-  .ring-ml{font-size:28px; font-weight:700;}
-  .ring-time{font-size:13px; color:var(--sub); margin-top:2px;}
-  .section-label{font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--sub); margin:18px 0 8px;}
-  .grid-actions{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-  .action-btn{padding:16px 10px; border-radius:12px; background:var(--card2); border:1px solid var(--line); color:var(--text); font-size:14px; font-weight:600; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer;}
-  .action-btn .ic{font-size:20px;}
-  .action-btn:disabled{opacity:.3; cursor:not-allowed;}
-  .tramo-open{background:var(--card2); border:1px solid var(--accent); border-radius:12px; padding:14px; margin-bottom:10px;}
-  .close-tramo-btn{margin-top:12px; background:var(--bad); color:#fff; padding:10px; border-radius:8px; width:100%; font-weight:600; cursor:pointer; border:none;}
-  .overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50; align-items:flex-end;}
-  .overlay.active{display:flex;}
-  .modal{background:var(--card); width:100%; max-width:480px; margin:0 auto; border-radius:18px 18px 0 0; padding:20px 16px 26px; max-height:88vh; overflow-y:auto;}
-  .modal h3{margin:0 0 14px; font-size:16px;}
-  .modal-close{float:right; background:none; color:var(--sub); font-size:20px; padding:0 4px; cursor:pointer; border:none;}
-  .summary-line{display:flex; justify-content:space-between; font-size:14px; padding:6px 0; border-bottom:1px solid var(--line);}
-  .summary-line:last-child{border-bottom:none;}
-  .legend-box{padding:14px; border-radius:10px; font-weight:600; font-size:14px; text-align:center; margin-top:10px;}
-  .legend-good{background:#123322; color:var(--good);}
-  .legend-bad{background:#3a2410; color:var(--warn);}
-  .legend-info{background:#12233a; color:#60a5fa;}
-  .toast{position:fixed; bottom:16px; left:16px; right:16px; max-width:448px; margin:0 auto; background:var(--card2); border:1px solid var(--accent); padding:12px 14px; border-radius:10px; font-size:13px; display:none; z-index:60;}
-  .toast.show{display:block;}
-  .badge{display:inline-block; font-size:11px; padding:2px 8px; border-radius:8px; background:var(--accent); color:#fff; margin-left:6px;}
-  .sync-status{text-align:center; font-size:12px; margin-bottom:10px; color:var(--good);}
-  .tramo-sin-cerrar{color:var(--bad); font-weight:700;}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Bitácora Preventiva</title>
+  <!-- html2pdf -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style>
+    :root{
+      --bg:#0d0f14; --card:#191c24; --card2:#212531; --line:#2d3340;
+      --text:#f0f1f5; --sub:#9aa0ad; --accent:#f97316; --good:#22c55e;
+      --warn:#f59e0b; --bad:#ef4444; --radius:14px;
+    }
+    *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+    body{margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; padding-bottom:40px;}
+    .screen{display:none; padding:16px; max-width:480px; margin:0 auto;}
+    .screen.active{display:block;}
+    h1{font-size:18px; margin:0 0 4px;}
+    h2{font-size:15px; color:var(--sub); margin:0 0 16px; font-weight:500;}
+    .card{background:var(--card); border-radius:var(--radius); padding:16px; margin-bottom:14px; border:1px solid var(--line);}
+    label{display:block; font-size:13px; color:var(--sub); margin:12px 0 6px;}
+    label:first-child{margin-top:0;}
+    input[type=text], input[type=number], select{
+      width:100%; padding:12px; border-radius:10px; border:1px solid var(--line);
+      background:var(--card2); color:var(--text); font-size:16px;
+    }
+    input:focus, select:focus{outline:none; border-color:var(--accent);}
+    .hint{font-size:12px; color:var(--sub); margin-top:4px;}
+    .hint.auto{color:var(--good);}
+    .hint.error{color:var(--bad);}
+    .btn{width:100%; padding:14px; border-radius:10px; font-size:15px; font-weight:600; background:var(--accent); color:#fff; margin-top:16px; border:none; cursor:pointer; font-family:inherit;}
+    .btn:disabled{opacity:.35; cursor:not-allowed;}
+    .btn.secondary{background:var(--card2); color:var(--text); border:1px solid var(--line);}
+    .btn.danger{background:var(--bad);}
+    .toggle2{display:flex; gap:10px; margin-top:6px;}
+    .toggle2 button{flex:1; padding:14px; border-radius:10px; background:var(--card2); color:var(--text); border:1px solid var(--line); font-size:15px; font-weight:600; cursor:pointer;}
+    .toggle2 button.sel{background:var(--accent); border-color:var(--accent); color:#fff;}
+    .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;}
+    .chip{padding:10px 14px; border-radius:20px; background:var(--card2); border:1px solid var(--line); color:var(--text); font-size:14px; font-weight:500; cursor:pointer;}
+    .chip.active{background:var(--accent); border-color:var(--accent); color:#fff;}
+    .ring-wrap{display:flex; flex-direction:column; align-items:center; padding:10px 0 6px; position:relative;}
+    svg.ring{width:170px; height:170px;}
+    .ring-center{position:relative; margin-top:-125px; width:170px; text-align:center; pointer-events:none;}
+    .ring-ml{font-size:28px; font-weight:700;}
+    .ring-time{font-size:13px; color:var(--sub); margin-top:2px;}
+    /* Iconos flotantes a los lados del anillo */
+    .ring-side-icons{
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      justify-content: space-between;
+      padding: 0 5px;
+      pointer-events: none;
+    }
+    .ring-side-icon{
+      pointer-events: auto;
+      background: var(--card2);
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ring-side-icon:active{transform: scale(0.9);}
+    .ring-side-icon.left{order:1;}
+    .ring-side-icon.right{order:2;}
+    .section-label{font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--sub); margin:18px 0 8px;}
+    .grid-actions{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+    .action-btn{padding:16px 10px; border-radius:12px; background:var(--card2); border:1px solid var(--line); color:var(--text); font-size:14px; font-weight:600; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer;}
+    .action-btn .ic{font-size:20px;}
+    .action-btn:disabled{opacity:.3; cursor:not-allowed;}
+    .tramo-open{background:var(--card2); border:1px solid var(--accent); border-radius:12px; padding:14px; margin-bottom:10px;}
+    .close-tramo-btn{margin-top:12px; background:var(--bad); color:#fff; padding:10px; border-radius:8px; width:100%; font-weight:600; cursor:pointer; border:none;}
+    .overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50; align-items:flex-end;}
+    .overlay.active{display:flex;}
+    .modal{background:var(--card); width:100%; max-width:480px; margin:0 auto; border-radius:18px 18px 0 0; padding:20px 16px 26px; max-height:88vh; overflow-y:auto;}
+    .modal h3{margin:0 0 14px; font-size:16px;}
+    .modal-close{float:right; background:none; color:var(--sub); font-size:20px; padding:0 4px; cursor:pointer; border:none;}
+    .summary-line{display:flex; justify-content:space-between; font-size:14px; padding:6px 0; border-bottom:1px solid var(--line);}
+    .summary-line:last-child{border-bottom:none;}
+    .legend-box{padding:14px; border-radius:10px; font-weight:600; font-size:14px; text-align:center; margin-top:10px;}
+    .legend-good{background:#123322; color:var(--good);}
+    .legend-bad{background:#3a2410; color:var(--warn);}
+    .legend-info{background:#12233a; color:#60a5fa;}
+    .toast{position:fixed; bottom:16px; left:16px; right:16px; max-width:448px; margin:0 auto; background:var(--card2); border:1px solid var(--accent); padding:12px 14px; border-radius:10px; font-size:13px; display:none; z-index:60;}
+    .toast.show{display:block;}
+    .badge{display:inline-block; font-size:11px; padding:2px 8px; border-radius:8px; background:var(--accent); color:#fff; margin-left:6px;}
+    .sync-status{text-align:center; font-size:12px; margin-bottom:10px; color:var(--good);}
+    .tramo-sin-cerrar{color:var(--bad); font-weight:700;}
+    .clipboard-box{background:var(--card2); padding:12px; border-radius:8px; white-space:pre-wrap; font-family:monospace; font-size:13px; max-height:300px; overflow-y:auto; border:1px solid var(--line);}
+    /* Estilos para cierre de tramo */
+    .cierre-opciones {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 8px 0 12px;
+    }
+    .cierre-opcion {
+      background: var(--card2);
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      transition: border-color 0.2s;
+      cursor: pointer;
+    }
+    .cierre-opcion.seleccionada {
+      border-color: var(--accent);
+      background: var(--card);
+    }
+    .cierre-opcion .opcion-titulo {
+      font-weight: 600;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cierre-opcion .opcion-ayuda {
+      font-size: 12px;
+      color: var(--sub);
+      margin: 4px 0 8px;
+    }
+    .cierre-opcion input {
+      margin-top: 6px;
+    }
+    .cierre-opcion input:disabled {
+      opacity: 0.4;
+      background: var(--card2);
+    }
+    /* Indicador offline */
+    .offline-indicator{
+      display: none;
+      background: var(--bad);
+      color: #fff;
+      text-align: center;
+      font-size: 12px;
+      padding: 4px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
 
@@ -99,8 +181,14 @@
 <!-- PANTALLA 2: DASHBOARD -->
 <div class="screen" id="screen-dashboard">
   <div class="sync-status" id="sync-status">● Listo</div>
+  <div class="offline-indicator" id="offline-indicator">📡 Sin conexión — los datos se guardarán localmente</div>
 
+  <!-- Contenedor del anillo con iconos laterales -->
   <div class="ring-wrap">
+    <div class="ring-side-icons">
+      <button class="ring-side-icon left" id="btn-ver-bitacora" title="Ver bitácora completa" onclick="verBitacoraCompleta()">📋</button>
+      <button class="ring-side-icon right" id="btn-hoja-contingencia" title="Hoja de contingencia" onclick="generarHojaContingencia()">📄</button>
+    </div>
     <svg class="ring" viewBox="0 0 170 170">
       <circle cx="85" cy="85" r="72" fill="none" stroke="#242833" stroke-width="12"/>
       <circle id="ring-progress" cx="85" cy="85" r="72" fill="none" stroke="var(--accent)" stroke-width="12"
@@ -112,18 +200,13 @@
     </div>
   </div>
 
-  <button class="btn secondary" style="margin-bottom:8px;" onclick="verBitacoraCompleta()">📋 Ver bitácora completa</button>
-  <button class="btn secondary" style="margin-bottom:10px;" onclick="generarHojaContingencia()">📄 Hoja de contingencia</button>
+  <!-- Se quitaron los botones de abajo, ahora son iconos flotantes -->
 
   <div id="tramo-abierto-box"></div>
 
   <div class="section-label">Tramo</div>
   <div class="grid-actions" id="box-sin-tramo">
     <input type="text" id="nuevo-tramo-nombre" placeholder="Solo números (máx 6)" maxlength="6" inputmode="numeric" style="grid-column:1/3;">
-    <div class="toggle2" style="grid-column:1/3;">
-      <button id="btn-flujo" onclick="seleccionarSentidoNuevo('Flujo')">Flujo</button>
-      <button id="btn-contraflujo" onclick="seleccionarSentidoNuevo('Contraflujo')">Contraflujo</button>
-    </div>
     <button class="btn" id="btn-abrir-tramo" style="grid-column:1/3;" disabled onclick="abrirTramo()">Abrir tramo</button>
   </div>
 
@@ -142,7 +225,7 @@
   <div class="modal">
     <button class="modal-close" onclick="cerrarModal('modal-bitacora')">✕</button>
     <h3>📋 Bitácora acumulada</h3>
-    <div class="clipboard-box" id="bitacora-completa-text" style="display:block;"></div>
+    <div class="clipboard-box" id="bitacora-completa-text"></div>
     <button class="btn" onclick="copiarBitacoraCompleta()">📋 Copiar todo</button>
   </div>
 </div>
@@ -154,11 +237,6 @@
     <h3>Desobstrucción</h3>
     <label>Tramo</label>
     <input type="text" id="desob-tramo" placeholder="Nombre del tramo" maxlength="6">
-    <label>Sentido</label>
-    <div class="toggle2">
-      <button id="desob-flujo" onclick="toggleSentido('desob',this,'Flujo')">Flujo</button>
-      <button id="desob-contraflujo" onclick="toggleSentido('desob',this,'Contraflujo')">Contraflujo</button>
-    </div>
     <button class="btn" onclick="registrarDesobstruccion()">Registrar</button>
   </div>
 </div>
@@ -186,7 +264,6 @@
       <button class="chip" onclick="seleccionarTipoNovedad(this,'Avería')">🔧 Avería</button>
       <button class="chip" onclick="seleccionarTipoNovedad(this,'Lodos')">🗑️ Lodos</button>
       <button class="chip" onclick="seleccionarTipoNovedad(this,'Fuerza mayor')">🌧️ Fuerza mayor</button>
-      <button class="chip" onclick="seleccionarTipoNovedad(this,'Revisión')">🔍 Revisión</button>
     </div>
     <div id="novedad-subcausas-box" style="display:none;">
       <label>Causa de avería</label>
@@ -211,20 +288,23 @@
 <!-- MODAL: CIERRE DE TRAMO -->
 <div class="overlay" id="ov-cierre-tramo">
   <div class="modal">
+    <button class="modal-close" onclick="cerrarModal('modal-cierre-tramo')">✕</button>
     <h3>Cerrar tramo</h3>
-    <label>¿Apto CCTV?</label>
-    <div class="toggle2">
-      <button id="ct-si" onclick="seleccionarAptoCCTV('SI')">Sí</button>
-      <button id="ct-no" onclick="seleccionarAptoCCTV('NO')">No</button>
+    <p style="font-size:13px; color:var(--sub); margin-bottom:12px;">Selecciona una opción (clic en la tarjeta o en el campo) y completa el dato requerido.</p>
+
+    <div class="cierre-opciones">
+      <div class="cierre-opcion" id="opcion-cctv-si" onclick="seleccionarOpcionCierre('SI')">
+        <div class="opcion-titulo">📹 Apto CCTV</div>
+        <div class="opcion-ayuda">El tramo fue inspeccionado con CCTV y se puede medir en metros lineales.</div>
+        <input type="number" id="ct-ml" min="0" max="150" step="1" placeholder="ML (0-150)" disabled>
+      </div>
+      <div class="cierre-opcion" id="opcion-cctv-no" onclick="seleccionarOpcionCierre('NO')">
+        <div class="opcion-titulo">🚫 No apto CCTV</div>
+        <div class="opcion-ayuda">El tramo no fue apto para CCTV, describe el motivo en la observación.</div>
+        <input type="text" id="ct-obs" placeholder="Observación (obligatoria)" disabled>
+      </div>
     </div>
-    <div id="ct-ml-box" style="display:none;">
-      <label>ML (máx 150)</label>
-      <input type="number" id="ct-ml" min="0" max="150" step="1">
-    </div>
-    <div id="ct-obs-box" style="display:none;">
-      <label>Observación (obligatoria)</label>
-      <input type="text" id="ct-obs" placeholder="¿Por qué no es apto?">
-    </div>
+
     <button class="btn" id="btn-confirmar-cierre-tramo" disabled onclick="confirmarCierreTramo()">Confirmar cierre</button>
   </div>
 </div>
@@ -233,7 +313,7 @@
 <div class="overlay" id="ov-confirmar-cierre">
   <div class="modal">
     <h3>⚠️ ¿Cerrar jornada?</h3>
-    <p style="font-size:14px; color:var(--sub);">Esta acción no se puede deshacer.</p>
+    <p style="font-size:14px; color:var(--sub);">Esta acción generará el PDF de cierre y finalizará la jornada.</p>
     <div class="card" style="margin-top:12px;">
       <div class="summary-line"><span>Placa</span><strong id="cc-placa"></strong></div>
       <div class="summary-line"><span>ML del día</span><strong id="cc-ml"></strong></div>
@@ -241,13 +321,13 @@
       <div class="summary-line"><span>M3 total</span><strong id="cc-m3"></strong></div>
       <div id="cc-tramos-sin-cerrar"></div>
     </div>
-    <p style="font-size:13px; color:var(--sub); margin-top:12px;">💡 <b>Sugerencia:</b> Puedes imprimir o guardar como PDF esta pantalla (Ctrl+P).</p>
+    <p style="font-size:13px; color:var(--sub); margin-top:12px;">💡 El PDF se descargará automáticamente.</p>
     <button class="btn secondary" onclick="cerrarModal('modal-confirmar-cierre')">Cancelar</button>
-    <button class="btn danger" onclick="confirmarCierreDefinitivo()">Sí, cerrar jornada</button>
+    <button class="btn danger" onclick="confirmarCierreDefinitivo()">Sí, cerrar y exportar PDF</button>
   </div>
 </div>
 
-<!-- PANTALLA 3: CIERRE DE JORNADA -->
+<!-- PANTALLA 3: CIERRE DE JORNADA (resumen) -->
 <div class="screen" id="screen-cierre">
   <h1>Cierre de jornada</h1>
   <h2>Resumen automático</h2>
@@ -273,8 +353,9 @@
     <option>Luis Díaz</option>
     <option>Luis Vergara</option>
     <option>Armando Pájaro</option>
+    <option>Eider Mina</option>
   </select>
-  <button class="btn" id="btn-confirmar-exportar" onclick="abrirModalConfirmarCierre()">Confirmar y exportar</button>
+  <button class="btn" id="btn-confirmar-exportar" onclick="abrirModalConfirmarCierre()">Confirmar y exportar PDF</button>
   <button class="btn secondary" onclick="volverDashboard()">Volver</button>
 </div>
 
@@ -286,6 +367,7 @@ const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfhMKFjKQtPKiTzgf3tJO
 const META_ML = 250;
 const JORNADA_SEG = 8*3600;
 const SYNC_QUEUE_KEY = "bitacora_sync_queue_v1";
+const STATE_KEY = "bitacora_state_v1";
 
 /* ==================== ESTADO ==================== */
 let STATE = {
@@ -297,46 +379,67 @@ let STATE = {
 };
 let timerHandle=null;
 let segRestantes = JORNADA_SEG;
-let nuevoSentido = null;
-let tempSentido = {desob:null};
 let tempTipoNovedad = null;
 let tempCausa = null;
 let tempRegresa = null;
-let tempApto = null;
+let tempOpcionCierre = null;
 
-/* ==================== UTILIDADES ==================== */
-function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2600); }
-function capitalizar(s){ if(!s) return s; return s.charAt(0).toUpperCase()+s.slice(1).toLowerCase(); }
-function nowISO(){ return new Date().toISOString(); }
-function fmtHora(iso){ const d=new Date(iso); return d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}); }
-function round1(n){ return Math.round(n * 10) / 10; }
-function getGPS(){
-  return new Promise((resolve)=>{
-    if(!navigator.geolocation){ resolve(null); return; }
-    navigator.geolocation.getCurrentPosition(
-      pos=>resolve({lat:pos.coords.latitude,lng:pos.coords.longitude}),
-      ()=>resolve(null), {timeout:8000}
-    );
-  });
+/* ==================== PERSISTENCIA ==================== */
+function guardarEstado() {
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify(STATE));
+  } catch(e) {}
 }
-async function reverseGeocode(gps){
-  if(!gps) return "";
-  try{
-    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${gps.lat}&lon=${gps.lng}&format=json`);
-    const d = await r.json();
-    const a = d.address || {};
-    return capitalizar(a.suburb || a.neighbourhood || a.quarter || a.city_district || a.village || "");
-  }catch(e){ return ""; }
+function cargarEstado() {
+  try {
+    const data = localStorage.getItem(STATE_KEY);
+    if (data) {
+      const saved = JSON.parse(data);
+      // Solo restaurar si no se ha cerrado la jornada
+      if (!saved.cerrada) {
+        STATE = saved;
+        // Recalcular segRestantes según horaInicio
+        if (STATE.horaInicio) {
+          const elapsed = Math.floor((Date.now() - new Date(STATE.horaInicio).getTime()) / 1000);
+          segRestantes = Math.max(0, JORNADA_SEG - elapsed);
+        }
+      }
+    }
+  } catch(e) {}
+}
+function limpiarEstado() {
+  try { localStorage.removeItem(STATE_KEY); } catch(e) {}
 }
 
-/* ==================== ENVÍO AL FORM ==================== */
+/* ==================== COLA DE SINCRONIZACIÓN ==================== */
 function cargarCola(){ try{ return JSON.parse(localStorage.getItem(SYNC_QUEUE_KEY) || '[]'); }catch(e){ return []; } }
 function guardarCola(cola){ try{ localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(cola)); }catch(e){} }
+function encolarPayload(payload) {
+  const cola = cargarCola();
+  cola.push(payload);
+  guardarCola(cola);
+  actualizarEstadoSync();
+}
 function actualizarEstadoSync(){
   const el = document.getElementById('sync-status');
+  if (!el) return;
   const cola = cargarCola();
   if(cola.length === 0){ el.textContent = '● Listo'; el.style.color = 'var(--good)'; }
   else { el.textContent = `● ${cola.length} pendiente(s)`; el.style.color = 'var(--warn)'; }
+}
+async function procesarCola() {
+  const cola = cargarCola();
+  if (cola.length === 0) return;
+  let nuevaCola = [];
+  for (const payload of cola) {
+    try {
+      await enviarPayload(payload);
+    } catch(e) {
+      nuevaCola.push(payload);
+    }
+  }
+  guardarCola(nuevaCola);
+  actualizarEstadoSync();
 }
 async function enviarPayload(payload) {
   const formData = new URLSearchParams();
@@ -355,27 +458,42 @@ async function enviarPayload(payload) {
 }
 async function enviarHitoRemoto(tipo, datos){
   const payload = {tipo, datos, placa:STATE.placa, contratista:STATE.contratista, barrio:STATE.barrio, inspector:STATE.inspector||''};
-  try{ await enviarPayload(payload); actualizarEstadoSync(); }
-  catch(e){ console.error('Error:', e); }
+  if (!navigator.onLine) {
+    encolarPayload(payload);
+    return;
+  }
+  try {
+    await enviarPayload(payload);
+  } catch(e) {
+    encolarPayload(payload);
+  }
+  actualizarEstadoSync();
 }
 
-/* ==================== REGISTRAR HITO LOCAL ==================== */
+/* ==================== REGISTRAR HITO (nuevo formato) ==================== */
 function registrarHito(bloqueTexto){
   STATE.actividadCount++;
   const encabezado = generarEncabezado();
   const bloqueConNumero = bloqueTexto.replace('[Actividad del dia #; X]', `[Actividad del dia #; ${STATE.actividadCount}]`);
-  const textoCopiar = encabezado + '\n' + bloqueConNumero;
-  if(STATE.bitacoraInterna === ""){ STATE.bitacoraInterna = bloqueConNumero; }
-  else { STATE.bitacoraInterna += '\n\n' + bloqueConNumero; }
-  copiarAlPortapapeles(textoCopiar);
+  // Guardar en bitacoraInterna con encabezado incluido
+  const textoCompleto = encabezado + '\n' + bloqueConNumero;
+  if(STATE.bitacoraInterna === ""){ 
+    STATE.bitacoraInterna = textoCompleto; 
+  } else { 
+    STATE.bitacoraInterna += '\n\n' + textoCompleto; 
+  }
+  guardarEstado();
+  copiarAlPortapapeles(textoCompleto);
 }
+
 function generarEncabezado(){
   const placaLimpia = STATE.placa ? STATE.placa.replace(/\s+/g,'') : '';
   const fecha = STATE.horaInicio ? new Date(STATE.horaInicio).toLocaleDateString('es-CO') : '';
   const turno = STATE.horaInicio ? (new Date(STATE.horaInicio).getHours() >= 6 && new Date(STATE.horaInicio).getHours() < 18 ? 'Diurno' : 'Nocturno') : '';
   const barrio = STATE.barrio ? capitalizar(STATE.barrio) : '';
-  return `#_preventivo\n${placaLimpia}|${fecha}|${turno}|${barrio}\n`;
+  return `#_preventivo\n${placaLimpia}|${fecha}|${turno}|${barrio}`;
 }
+
 function copiarAlPortapapeles(texto){
   if(navigator.clipboard && window.isSecureContext){
     navigator.clipboard.writeText(texto).then(()=>toast("✅ Copiado")).catch(()=>fallbackCopy(texto));
@@ -390,7 +508,7 @@ function fallbackCopy(texto){
   document.body.removeChild(textarea);
 }
 
-/* ==================== APERTURA (CORREGIDO) ==================== */
+/* ==================== APERTURA ==================== */
 function validarApertura(){
   const placaInput = document.getElementById('ap-placa').value.trim();
   const barrioInput = document.getElementById('ap-barrio').value.trim();
@@ -415,11 +533,16 @@ document.getElementById('btn-abrir-jornada').onclick = function(){
   STATE.contratista = contratista;
   STATE.barrio = capitalizar(barrioValor);
   STATE.horaInicio = nowISO();
+  STATE.cerrada = false;
+  
+  guardarEstado();
   
   document.getElementById('screen-apertura').classList.remove('active');
   document.getElementById('screen-dashboard').classList.add('active');
   iniciarCronometro();
   renderDashboard();
+  actualizarEstadoSync();
+  verificarConexion();
   enviarHitoRemoto('jornadaInicio', {});
 };
 
@@ -441,6 +564,7 @@ initGPSApertura();
 
 /* ==================== CRONÓMETRO ==================== */
 function iniciarCronometro(){
+  clearInterval(timerHandle);
   timerHandle = setInterval(()=>{
     segRestantes -= 1;
     if(segRestantes <= 0){ segRestantes = 0; clearInterval(timerHandle); }
@@ -472,34 +596,28 @@ function calcularMLTotal(){
 document.getElementById('nuevo-tramo-nombre').addEventListener('input', e=>{
   e.target.value = e.target.value.replace(/[^0-9]/g, '');
   if(e.target.value.length > 6) e.target.value = e.target.value.slice(0, 6);
-  validarNuevoTramo();
+  document.getElementById('btn-abrir-tramo').disabled = !e.target.value.trim();
 });
-function seleccionarSentidoNuevo(s){
-  nuevoSentido = s;
-  document.getElementById('btn-flujo').classList.toggle('sel', s==='Flujo');
-  document.getElementById('btn-contraflujo').classList.toggle('sel', s==='Contraflujo');
-  validarNuevoTramo();
-}
-function validarNuevoTramo(){
-  const nombre = document.getElementById('nuevo-tramo-nombre').value.trim();
-  document.getElementById('btn-abrir-tramo').disabled = !(nombre && nuevoSentido);
-}
+
 async function abrirTramo(){
   const nombre = document.getElementById('nuevo-tramo-nombre').value.trim();
-  const sentido = nuevoSentido;
   const gps = await getGPS();
   const id = 't'+Date.now();
   const horaISO = nowISO();
-  STATE.tramos.push({id, tramo:nombre, sentido, horaInicio:horaISO, gps, cierre:null, eventos:[]});
+  STATE.tramos.push({id, tramo:nombre, horaInicio:horaISO, gps, cierre:null, eventos:[]});
   STATE.tramoActivoId = id;
+  guardarEstado();
   
-  registrarHito(`[Tramo: ${nombre}]\n[sentido: ${sentido}]\n[Hora: ${fmtHora(horaISO)}]\n[Actividad del dia #; X]`);
-  enviarHitoRemoto('tramoInicio', {tramo:nombre, sentido, lat: gps?gps.lat:'', lng: gps?gps.lng:''});
+  const gpsText = gps ? `${gps.lat},${gps.lng}` : 'sin GPS';
+  registrarHito(`Apertura de tramo
+[Tramo: ${nombre}]
+[Hora: ${fmtHora(horaISO)}]
+[gps: ${gpsText}]
+[Actividad del dia #; X]`);
+  
+  enviarHitoRemoto('tramoInicio', {tramo:nombre, lat: gps?gps.lat:'', lng: gps?gps.lng:''});
   
   document.getElementById('nuevo-tramo-nombre').value="";
-  nuevoSentido=null;
-  document.getElementById('btn-flujo').classList.remove('sel');
-  document.getElementById('btn-contraflujo').classList.remove('sel');
   renderDashboard();
 }
 
@@ -515,7 +633,7 @@ function renderDashboard(){
     box.innerHTML = `
       <div class="section-label">Tramo activo</div>
       <div class="tramo-open">
-        <div class="t-name">${activo.tramo} <span class="badge">${activo.sentido}</span></div>
+        <div class="t-name">${activo.tramo}</div>
         <div class="t-sub">Iniciado ${fmtHora(activo.horaInicio)}</div>
         <button class="close-tramo-btn" onclick="abrirModal('modal-cierre-tramo')">Cerrar tramo</button>
       </div>`;
@@ -527,37 +645,50 @@ function renderDashboard(){
 }
 
 /* ==================== DESOBSTRUCCIÓN ==================== */
-function toggleSentido(prefix, btn, val){
-  tempSentido[prefix]=val;
-  document.getElementById(prefix+'-flujo').classList.toggle('sel', val==='Flujo');
-  document.getElementById(prefix+'-contraflujo').classList.toggle('sel', val==='Contraflujo');
-}
 async function registrarDesobstruccion(){
   const activo = STATE.tramos.find(t=>t.id===STATE.tramoActivoId && !t.cierre);
   if(!activo){ toast("No hay tramo activo"); return; }
   const tramoTxt = document.getElementById('desob-tramo').value.trim() || activo.tramo;
-  const sentido = tempSentido.desob || activo.sentido;
   const horaISO = nowISO();
   const gps = await getGPS();
-  activo.eventos.push({tipo:'Desobstrucción', tramo:tramoTxt, sentido, hora:horaISO});
-  registrarHito(`[Tramo: ${tramoTxt}]\n[sentido: ${sentido}]\n[Hora: ${fmtHora(horaISO)}]\n[Actividad del dia #; X]`);
-  enviarHitoRemoto('desob', {tramo:tramoTxt, sentido, lat: gps?gps.lat:'', lng: gps?gps.lng:''});
+  activo.eventos.push({tipo:'Desobstrucción', tramo:tramoTxt, hora:horaISO});
+  guardarEstado();
+  
+  const gpsText = gps ? `${gps.lat},${gps.lng}` : 'sin GPS';
+  registrarHito(`Desobstrucción
+[Tramo: ${tramoTxt}]
+[Hora: ${fmtHora(horaISO)}]
+[gps: ${gpsText}]
+[Actividad del dia #; X]`);
+  
+  enviarHitoRemoto('desob', {tramo:tramoTxt, lat: gps?gps.lat:'', lng: gps?gps.lng:''});
   document.getElementById('desob-tramo').value="";
-  tempSentido.desob=null;
-  document.getElementById('desob-flujo').classList.remove('sel');
-  document.getElementById('desob-contraflujo').classList.remove('sel');
   cerrarModal('modal-desob');
   renderDashboard();
 }
 
 /* ==================== M3 ==================== */
 async function registrarM3(){
-  const valor = Number(document.getElementById('m3-valor').value || 0);
+  const valorInput = document.getElementById('m3-valor').value;
+  const valor = Number(valorInput);
+  if (!Number.isFinite(valor) || valor < 0) {
+    toast("Valor de M3 inválido");
+    return;
+  }
   const barrioM3 = capitalizar(document.getElementById('m3-barrio').value.trim()) || STATE.barrio;
   const horaISO = nowISO();
   const gps = await getGPS();
   STATE.m3Total += valor;
-  registrarHito(`[M3: ${valor}]\n[Barrio: ${barrioM3}]\n[Hora: ${fmtHora(horaISO)}]\n[Actividad del dia #; X]`);
+  guardarEstado();
+  
+  const gpsText = gps ? `${gps.lat},${gps.lng}` : 'sin GPS';
+  registrarHito(`Carga de agua
+[M3: ${valor}]
+[Barrio: ${barrioM3}]
+[Hora: ${fmtHora(horaISO)}]
+[gps: ${gpsText}]
+[Actividad del dia #; X]`);
+  
   enviarHitoRemoto('m3', {valor, barrioM3, fueraServicio: valor===0, lat: gps?gps.lat:'', lng: gps?gps.lng:''});
   document.getElementById('m3-valor').value="";
   document.getElementById('m3-barrio').value="";
@@ -583,8 +714,12 @@ function seleccionarTipoNovedad(btn, tipo){
   const btnReg = document.getElementById('btn-registrar-novedad');
   if(tipo==='Avería'){ sub.style.display='block'; reg.style.display='block'; btnReg.disabled=true; }
   else if(tipo==='Lodos'){ sub.style.display='none'; reg.style.display='block'; tempCausa='Lodos'; btnReg.disabled=true; }
-  else if(tipo==='Fuerza mayor'){ sub.style.display='none'; reg.style.display='none'; tempCausa='Fuerza mayor'; tempRegresa='FUERZA_MAYOR'; btnReg.disabled=false; }
-  else if(tipo==='Revisión'){ sub.style.display='none'; reg.style.display='block'; tempCausa='Revisión'; btnReg.disabled=true; }
+  else if(tipo==='Fuerza mayor'){ 
+    sub.style.display='none'; reg.style.display='none'; 
+    tempCausa='Fuerza mayor'; 
+    tempRegresa='FUERZA_MAYOR'; 
+    btnReg.disabled=false; 
+  }
 }
 function seleccionarCausa(btn, causa){
   tempCausa = causa;
@@ -610,14 +745,35 @@ async function registrarNovedad(){
   const ev = {tipo:'Novedad', causa:tempCausa||tempTipoNovedad, regresa:tempRegresa, hora:horaISO};
   const activo = STATE.tramos.find(t=>t.id===STATE.tramoActivoId && !t.cierre);
   if(activo){ activo.eventos.push(ev); } else { STATE.sueltos.push(ev); }
-  registrarHito(`[Novedad: ${tempCausa||tempTipoNovedad}]\n[Regresa: ${tempRegresa||'N/A'}]\n[Hora: ${fmtHora(horaISO)}]\n[Actividad del dia #; X]`);
+  guardarEstado();
+  
+  const gpsText = gps ? `${gps.lat},${gps.lng}` : 'sin GPS';
+  registrarHito(`Novedad
+[Novedad: ${tempCausa||tempTipoNovedad}]
+[Regresa: ${tempRegresa||'N/A'}]
+[Hora: ${fmtHora(horaISO)}]
+[gps: ${gpsText}]
+[Actividad del dia #; X]`);
+  
   enviarHitoRemoto('novedad', {causa:tempCausa||tempTipoNovedad, regresa:tempRegresa, lat: gps?gps.lat:'', lng: gps?gps.lng:''});
+  
+  // Cerrar jornada si es NO o FUERZA_MAYOR
   if(tempRegresa==='NO' || tempRegresa==='FUERZA_MAYOR'){
-    clearInterval(timerHandle); segRestantes=0; actualizarReloj();
-    if(activo){ activo.cierre={apto:null, ml:0, obs:`Turno finalizado por novedad: ${tempCausa||tempTipoNovedad}`}; }
-    cerrarModal('modal-novedad'); resetNovedadTemp(); irACierreJornada(); return;
+    clearInterval(timerHandle); 
+    segRestantes=0; 
+    actualizarReloj();
+    if(activo){ 
+      activo.cierre={apto:null, ml:0, obs:`Turno finalizado por novedad: ${tempCausa||tempTipoNovedad}`}; 
+      guardarEstado();
+    }
+    cerrarModal('modal-novedad'); 
+    resetNovedadTemp(); 
+    irACierreJornada(); 
+    return;
   }
-  cerrarModal('modal-novedad'); resetNovedadTemp(); renderDashboard();
+  cerrarModal('modal-novedad'); 
+  resetNovedadTemp(); 
+  renderDashboard();
 }
 function resetNovedadTemp(){
   tempTipoNovedad=null; tempCausa=null; tempRegresa=null;
@@ -631,39 +787,98 @@ function resetNovedadTemp(){
 }
 
 /* ==================== CIERRE DE TRAMO ==================== */
-function seleccionarAptoCCTV(val){
-  tempApto = val;
-  document.getElementById('ct-si').classList.toggle('sel', val==='SI');
-  document.getElementById('ct-no').classList.toggle('sel', val==='NO');
-  document.getElementById('ct-ml-box').style.display = val==='SI' ? 'block':'none';
-  document.getElementById('ct-obs-box').style.display = val==='NO' ? 'block':'none';
+function seleccionarOpcionCierre(valor){
+  tempOpcionCierre = valor;
+  document.getElementById('opcion-cctv-si').classList.toggle('seleccionada', valor==='SI');
+  document.getElementById('opcion-cctv-no').classList.toggle('seleccionada', valor==='NO');
+  
+  const inputML = document.getElementById('ct-ml');
+  const inputObs = document.getElementById('ct-obs');
+  if(valor==='SI'){
+    inputML.disabled = false;
+    inputObs.disabled = true;
+    inputObs.value = '';
+    inputML.focus();
+  } else {
+    inputML.disabled = true;
+    inputML.value = '';
+    inputObs.disabled = false;
+    inputObs.focus();
+  }
   validarCierreTramo();
 }
-document.getElementById('ct-ml').addEventListener('input', e=>{ if(Number(e.target.value)>150)e.target.value=150; validarCierreTramo(); });
-document.getElementById('ct-obs').addEventListener('input', validarCierreTramo);
+
+document.getElementById('ct-ml').addEventListener('focus', function() {
+  if (tempOpcionCierre !== 'SI') {
+    seleccionarOpcionCierre('SI');
+  }
+});
+document.getElementById('ct-obs').addEventListener('focus', function() {
+  if (tempOpcionCierre !== 'NO') {
+    seleccionarOpcionCierre('NO');
+  }
+});
+
 function validarCierreTramo(){
-  let ok=false;
-  if(tempApto==='SI'){ const ml=Number(document.getElementById('ct-ml').value); ok = ml>=0 && ml<=150; }
-  if(tempApto==='NO'){ ok = document.getElementById('ct-obs').value.trim().length>0; }
-  document.getElementById('btn-confirmar-cierre-tramo').disabled = !ok;
+  const btn = document.getElementById('btn-confirmar-cierre-tramo');
+  if(tempOpcionCierre==='SI'){
+    const ml = Number(document.getElementById('ct-ml').value);
+    btn.disabled = !(ml >= 0 && ml <= 150);
+  } else if(tempOpcionCierre==='NO'){
+    const obs = document.getElementById('ct-obs').value.trim();
+    btn.disabled = obs.length === 0;
+  } else {
+    btn.disabled = true;
+  }
 }
+
+document.getElementById('ct-ml').addEventListener('input', (e)=>{
+  if(Number(e.target.value)>150) e.target.value=150;
+  validarCierreTramo();
+});
+document.getElementById('ct-obs').addEventListener('input', validarCierreTramo);
+
 async function confirmarCierreTramo(){
   const activo = STATE.tramos.find(t=>t.id===STATE.tramoActivoId && !t.cierre);
   if(!activo) return;
   const horaISO = nowISO();
   const gps = await getGPS();
   const horasLimpieza = round1((new Date(horaISO)-new Date(activo.horaInicio))/3600000);
-  if(tempApto==='SI'){ activo.cierre={apto:'SI', ml:Number(document.getElementById('ct-ml').value), obs:''}; }
-  else { activo.cierre={apto:'NO', ml:0, obs:capitalizar(document.getElementById('ct-obs').value.trim())}; }
+  
+  if(tempOpcionCierre==='SI'){
+    activo.cierre = { apto: 'SI', ml: Number(document.getElementById('ct-ml').value), obs: '' };
+  } else {
+    activo.cierre = { apto: 'NO', ml: 0, obs: capitalizar(document.getElementById('ct-obs').value.trim()) };
+  }
   activo.horaFin = horaISO;
   STATE.tramoActivoId = null;
-  registrarHito(`[Cierre tramo: ${activo.tramo}]\n[Apto CCTV: ${activo.cierre.apto}]\n[ML: ${activo.cierre.ml}]\n[Horas: ${horasLimpieza}]\n[Hora: ${fmtHora(horaISO)}]\n[Actividad del dia #; X]`);
+  guardarEstado();
+  
+  const gpsText = gps ? `${gps.lat},${gps.lng}` : 'sin GPS';
+  registrarHito(`Cierre de tramo
+[Cierre tramo: ${activo.tramo}]
+[Apto CCTV: ${activo.cierre.apto}]
+[ML: ${activo.cierre.ml}]
+[Observación: ${activo.cierre.obs || 'N/A'}]
+[Horas: ${horasLimpieza}]
+[Hora: ${fmtHora(horaISO)}]
+[gps: ${gpsText}]
+[Actividad del dia #; X]`);
+  
   enviarHitoRemoto('tramoCierre', {tramo:activo.tramo, aptoCCTV:activo.cierre.apto, ml:activo.cierre.ml, observacion:activo.cierre.obs, horasLimpieza, lat: gps?gps.lat:'', lng: gps?gps.lng:''});
-  document.getElementById('ct-ml').value=""; document.getElementById('ct-obs').value="";
-  tempApto=null;
-  document.getElementById('ct-si').classList.remove('sel'); document.getElementById('ct-no').classList.remove('sel');
-  document.getElementById('ct-ml-box').style.display='none'; document.getElementById('ct-obs-box').style.display='none';
-  cerrarModal('modal-cierre-tramo'); renderDashboard(); actualizarReloj();
+  
+  // Resetear modal
+  document.getElementById('ct-ml').value="";
+  document.getElementById('ct-obs').value="";
+  document.getElementById('opcion-cctv-si').classList.remove('seleccionada');
+  document.getElementById('opcion-cctv-no').classList.remove('seleccionada');
+  tempOpcionCierre = null;
+  document.getElementById('ct-ml').disabled = true;
+  document.getElementById('ct-obs').disabled = true;
+  document.getElementById('btn-confirmar-cierre-tramo').disabled = true;
+  cerrarModal('modal-cierre-tramo');
+  renderDashboard();
+  actualizarReloj();
 }
 
 /* ==================== MODALES ==================== */
@@ -671,12 +886,106 @@ const MODAL_MAP = {
   'modal-desob':'ov-desob', 'modal-m3':'ov-m3', 'modal-novedad':'ov-novedad',
   'modal-cierre-tramo':'ov-cierre-tramo', 'modal-bitacora':'ov-bitacora', 'modal-confirmar-cierre':'ov-confirmar-cierre'
 };
-function abrirModal(id){ document.getElementById(MODAL_MAP[id]).classList.add('active'); if(id==='modal-m3') prefillM3Barrio(); }
+function abrirModal(id){ 
+  document.getElementById(MODAL_MAP[id]).classList.add('active'); 
+  if(id==='modal-m3') prefillM3Barrio();
+  if(id==='modal-cierre-tramo'){
+    // Reiniciar estado del modal
+    document.getElementById('ct-ml').value="";
+    document.getElementById('ct-obs').value="";
+    document.getElementById('opcion-cctv-si').classList.remove('seleccionada');
+    document.getElementById('opcion-cctv-no').classList.remove('seleccionada');
+    tempOpcionCierre = null;
+    document.getElementById('ct-ml').disabled = true;
+    document.getElementById('ct-obs').disabled = true;
+    document.getElementById('btn-confirmar-cierre-tramo').disabled = true;
+  }
+}
 function cerrarModal(id){ document.getElementById(MODAL_MAP[id]).classList.remove('active'); }
+
+/* ==================== BITÁCORA COMPLETA ==================== */
+function verBitacoraCompleta(){
+  const texto = STATE.bitacoraInterna || "No hay registros aún.";
+  document.getElementById('bitacora-completa-text').textContent = texto;
+  abrirModal('modal-bitacora');
+}
+function copiarBitacoraCompleta(){
+  const texto = document.getElementById('bitacora-completa-text').textContent;
+  if(texto && texto !== "No hay registros aún."){
+    copiarAlPortapapeles(texto);
+  } else {
+    toast("No hay contenido para copiar");
+  }
+}
+
+/* ==================== HOJA DE CONTINGENCIA ==================== */
+function generarHojaContingencia(){
+  const ventana = window.open('', '_blank', 'width=800,height=1000');
+  const fecha = STATE.horaInicio ? new Date(STATE.horaInicio).toLocaleDateString('es-CO') : new Date().toLocaleDateString('es-CO');
+  const turno = STATE.horaInicio ? (new Date(STATE.horaInicio).getHours() >= 6 && new Date(STATE.horaInicio).getHours() < 18 ? 'D' : 'N') : '';
+  const mlTotal = calcularMLTotal();
+  const horas = STATE.horaInicio && STATE.horaFin ? round1((new Date(STATE.horaFin)-new Date(STATE.horaInicio))/3600000) : '';
+  let tramosHTML = STATE.tramos.map((t,i)=>{
+    const resultado = t.cierre ? (t.cierre.apto==='SI' ? `✅ APTO → ${t.cierre.ml} ML` : `❌ NO APTO → ${t.cierre.obs||''}`) : '⚠️ SIN CERRAR';
+    return `<tr><td contenteditable="true">${i+1}</td><td contenteditable="true">#${t.tramo}</td><td contenteditable="true">${t.horaInicio?fmtHora24(t.horaInicio):''}</td><td contenteditable="true">${resultado}</td></tr>`;
+  }).join('');
+  if(!tramosHTML) tramosHTML = `<tr><td contenteditable="true">1</td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>`;
+  
+  // Eventos para mostrar en hoja (opcional)
+  const eventos = [...STATE.sueltos, ...STATE.tramos.flatMap(t=>t.eventos)];
+  const eventosHTML = eventos.length ? eventos.map(e=>{
+    const tipo = e.tipo === 'Desobstrucción' ? 'Desobstrucción' : `Novedad (${e.causa})`;
+    const regresa = e.regresa ? `Regresa: ${e.regresa}` : '';
+    return `<div style="font-size:10px;margin:3px 0;">- ${fmtHora(e.hora)} ${tipo} ${regresa}</div>`;
+  }).join('') : '<div style="font-size:10px;color:#888;">Sin eventos adicionales</div>';
+  
+  ventana.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Hoja de Contingencia</title>
+  <style>@page{size:letter;margin:6mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,sans-serif;background:#fff;padding:10mm 8mm}
+  .header{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:6px;border-bottom:3px solid #1a1a2e}.header-icon{width:35px;height:35px;background:#1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;}.header-title{font-size:14px;font-weight:800;color:#1a1a2e}.header-sub{font-size:9px;color:#8a8a9a}
+  .seccion{margin-bottom:8px;padding:8px 10px;background:#fafafa;border:1px solid #e0e0e5;border-radius:8px}.seccion-titulo{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#ff6b35;margin-bottom:6px}.fila{display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px}.tabla{width:100%;border-collapse:collapse;font-size:10px}.tabla th{background:#1a1a2e;color:#fff;padding:5px;text-align:center}.tabla td{padding:4px 5px;border-bottom:1px solid #e0e0e5;text-align:center;background:white}.tabla td[contenteditable="true"]:focus{outline:2px solid #ff6b35;background:#fff3e0}.resultado-box{background:#fff;border:2px solid #ff6b35;border-radius:6px;padding:6px;font-size:11px;font-weight:700;text-align:center;margin-top:4px}.btn-imprimir{background:#ff6b35;color:#fff;border:none;padding:12px 24px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px}@media print{.btn-imprimir{display:none}}
+  .editable-hint{font-size:9px;color:#888;margin-top:4px;text-align:center;border-top:1px dashed #ccc;padding-top:4px;}
+  </style>
+  </head><body>
+  <div class="header"><div class="header-icon">📋</div><div><div class="header-title">HOJA DE CONTINGENCIA — JORNADA</div><div class="header-sub">Generada: ${new Date().toLocaleString('es-CO')} · Campos editables para uso offline</div></div></div>
+  <div class="seccion"><div class="seccion-titulo">Datos del turno</div>
+    <div class="fila"><span>Fecha:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${fecha}</span></div>
+    <div class="fila"><span>Placa:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${STATE.placa||'—'}</span></div>
+    <div class="fila"><span>Jornada:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${turno}</span></div>
+    <div class="fila"><span>Barrio:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${STATE.barrio||'—'}</span></div>
+    <div class="fila"><span>Inspector:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${STATE.inspector||'—'}</span></div>
+    <div class="fila"><span>Hora inicio:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${STATE.horaInicio?fmtHora24(STATE.horaInicio):'—'}</span></div>
+    <div class="fila"><span>Hora fin:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${STATE.horaFin?fmtHora24(STATE.horaFin):'—'}</span></div>
+  </div>
+  <div class="seccion"><div class="seccion-titulo">Tramos</div>
+    <table class="tabla"><tr><th>#</th><th>Código</th><th>Hora</th><th>Resultado</th></tr>${tramosHTML}</table>
+  </div>
+  <div class="seccion"><div class="seccion-titulo">Eventos adicionales</div>${eventosHTML}</div>
+  <div class="seccion"><div class="seccion-titulo">Cierre</div>
+    <div class="fila"><span>ML total:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${mlTotal} ML</span></div>
+    <div class="fila"><span>Horas:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${horas} h</span></div>
+    <div class="fila"><span>M3:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${STATE.m3Total} m³</span></div>
+    <div class="resultado-box" contenteditable="true">${mlTotal>=META_ML?'✅ Meta cumplida':'❌ No cumplida'}</div>
+  </div>
+  <div style="margin-top:12px;padding-top:6px;border-top:2px solid #1a1a2e;display:flex;justify-content:space-between;font-size:10px;">
+    <div contenteditable="true">Firma: ______________________</div>
+    <div>Este documento es respaldo del cierre.</div>
+  </div>
+  <div class="editable-hint">✏️ Todos los campos son editables directamente. Use imprimir para guardar como PDF.</div>
+  <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+  </body></html>`);
+  ventana.document.close();
+}
 
 /* ==================== CIERRE JORNADA ==================== */
 function irACierreJornada(){
+  // Verificar si hay tramo activo sin cerrar
+  const activo = STATE.tramos.find(t=>t.id===STATE.tramoActivoId && !t.cierre);
+  if(activo){
+    const confirmar = confirm("Hay un tramo activo sin cerrar. ¿Desea cerrar la jornada de todas formas? El tramo quedará sin cerrar.");
+    if(!confirmar) return;
+  }
   STATE.horaFin = nowISO();
+  guardarEstado();
   document.getElementById('screen-dashboard').classList.remove('active');
   document.getElementById('screen-cierre').classList.add('active');
   renderResumen();
@@ -684,6 +993,7 @@ function irACierreJornada(){
 function volverDashboard(){
   document.getElementById('screen-cierre').classList.remove('active');
   document.getElementById('screen-dashboard').classList.add('active');
+  verificarConexion();
 }
 function renderResumen(){
   document.getElementById('rs-placa').textContent = STATE.placa;
@@ -703,14 +1013,40 @@ function renderResumen(){
   else if(evs.some(e=>e.tipo==='Novedad' && ['Hidráulica','Mecánica/Motor','Succión/Presión','Eléctrica'].includes(e.causa))) leyenda.innerHTML='<div class="legend-box legend-bad">🔧 Revisar placa</div>';
   else if(evs.some(e=>e.tipo==='Novedad' && ['Revisión','Fuerza mayor'].includes(e.causa))) leyenda.innerHTML='<div class="legend-box legend-info">ℹ️ Déficit explicado</div>';
   else leyenda.innerHTML='<div class="legend-box legend-bad">📍 Revisar zona/ritmo</div>';
+  
   const tramosBox = document.getElementById('rs-tramos');
   tramosBox.innerHTML = '<div class="section-label">Tramos</div>';
-  STATE.tramos.forEach(t=>{
-    const d=document.createElement('div'); d.className='summary-line';
-    if(t.cierre) d.innerHTML = `<span>${t.tramo} (${t.sentido})</span><strong>${t.cierre.apto==='SI'?t.cierre.ml+' ML':'No apto'}</strong>`;
-    else d.innerHTML = `<span class="tramo-sin-cerrar">${t.tramo} — SIN CERRAR</span><strong>—</strong>`;
-    tramosBox.appendChild(d);
-  });
+  if(STATE.tramos.length === 0){
+    tramosBox.innerHTML += '<div class="summary-line"><span>No hay tramos registrados</span></div>';
+  } else {
+    STATE.tramos.forEach(t=>{
+      const d=document.createElement('div'); d.className='summary-line';
+      if(t.cierre){
+        let detalle = '';
+        if(t.cierre.apto==='SI'){
+          detalle = `CCTV ✅ · ${t.cierre.ml} ML`;
+        } else {
+          detalle = `CCTV ❌ · ${t.cierre.obs || 'Sin observación'}`;
+        }
+        d.innerHTML = `<span>${t.tramo}</span><strong>${detalle}</strong>`;
+      } else {
+        d.innerHTML = `<span class="tramo-sin-cerrar">${t.tramo} — SIN CERRAR</span><strong>—</strong>`;
+      }
+      tramosBox.appendChild(d);
+    });
+  }
+  
+  // Mostrar eventos sueltos en resumen si hay
+  if(evs.length > 0){
+    const evsBox = document.createElement('div');
+    evsBox.className = 'card';
+    evsBox.style.marginTop = '10px';
+    evsBox.innerHTML = '<div class="section-label">Eventos</div>';
+    evs.forEach(e=>{
+      evsBox.innerHTML += `<div class="summary-line"><span>${fmtHora(e.hora)} ${e.tipo}${e.causa?' - '+e.causa:''}${e.regresa?' (Regresa: '+e.regresa+')':''}</span></div>`;
+    });
+    tramosBox.after(evsBox);
+  }
 }
 function abrirModalConfirmarCierre(){
   if(!document.getElementById('cierre-inspector').value){ toast('Selecciona inspector'); return; }
@@ -721,19 +1057,99 @@ function abrirModalConfirmarCierre(){
   document.getElementById('cc-tramos-sin-cerrar').innerHTML = STATE.tramos.filter(t=>!t.cierre).length>0 ? '<div class="summary-line"><span class="tramo-sin-cerrar">⚠️ Tramos sin cerrar</span></div>' : '';
   abrirModal('modal-confirmar-cierre');
 }
+
+/* ==================== CIERRE DEFINITIVO Y PDF ==================== */
 async function confirmarCierreDefinitivo(){
   const inspector = document.getElementById('cierre-inspector').value;
   STATE.inspector = inspector;
   const horas = STATE.tramos.reduce((s,t)=>s+(t.horasLimpieza||0),0);
   await enviarHitoRemoto('jornadaCierre', {horasLimpiadas: round1(horas)});
+  await generarPDFCierre();
+  STATE.cerrada = true;
+  guardarEstado();
   cerrarModal('modal-confirmar-cierre');
-  toast('✅ Jornada cerrada');
+  toast('✅ Jornada cerrada — PDF generado');
   setTimeout(reiniciarApp, 2000);
 }
+
+async function generarPDFCierre() {
+  const fecha = STATE.horaInicio ? new Date(STATE.horaInicio).toLocaleDateString('es-CO') : new Date().toLocaleDateString('es-CO');
+  const turno = STATE.horaInicio ? (new Date(STATE.horaInicio).getHours() >= 6 && new Date(STATE.horaInicio).getHours() < 18 ? 'D' : 'N') : '';
+  const mlTotal = calcularMLTotal();
+  const horas = STATE.horaInicio && STATE.horaFin ? round1((new Date(STATE.horaFin)-new Date(STATE.horaInicio))/3600000) : '';
+  let tramosHTML = STATE.tramos.map((t,i)=>{
+    const resultado = t.cierre ? (t.cierre.apto==='SI' ? `✅ APTO → ${t.cierre.ml} ML` : `❌ NO APTO → ${t.cierre.obs||''}`) : '⚠️ SIN CERRAR';
+    return `<tr><td>${i+1}</td><td>#${t.tramo}</td><td>${t.horaInicio?fmtHora24(t.horaInicio):''}</td><td>${resultado}</td></tr>`;
+  }).join('');
+  if(!tramosHTML) tramosHTML = `<tr><td colspan="4">Sin tramos</td></tr>`;
+
+  const htmlContent = `
+  <div id="pdf-cierre" style="font-family:Inter, sans-serif;background:#fff;padding:10mm 8mm;max-width:100%;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:6px;border-bottom:3px solid #1a1a2e;">
+      <div style="width:35px;height:35px;background:#1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;">📋</div>
+      <div><div style="font-size:14px;font-weight:800;color:#1a1a2e;">HOJA DE CONTINGENCIA — JORNADA</div><div style="font-size:9px;color:#8a8a9a;">Cierre automático · ${new Date().toLocaleString('es-CO')}</div></div>
+    </div>
+    <div style="margin-bottom:8px;padding:8px 10px;background:#fafafa;border:1px solid #e0e0e5;border-radius:8px;">
+      <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#ff6b35;margin-bottom:6px;">Datos del turno</div>
+      <div style="display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px;">Fecha: <b>${fecha}</b></div>
+      <div style="display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px;">Placa: <b>${STATE.placa||'—'}</b></div>
+      <div style="display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px;">Jornada: <b>${turno}</b></div>
+      <div style="display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px;">Barrio: <b>${STATE.barrio||'—'}</b></div>
+      <div style="display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px;">Inspector: <b>${STATE.inspector||'—'}</b></div>
+      <div style="display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px;">Hora inicio: <b>${STATE.horaInicio?fmtHora24(STATE.horaInicio):'—'}</b></div>
+      <div style="display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px;">Hora fin: <b>${STATE.horaFin?fmtHora24(STATE.horaFin):'—'}</b></div>
+    </div>
+    <div style="margin-bottom:8px;padding:8px 10px;background:#fafafa;border:1px solid #e0e0e5;border-radius:8px;">
+      <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#ff6b35;margin-bottom:6px;">Tramos</div>
+      <table style="width:100%;border-collapse:collapse;font-size:10px;">
+        <tr><th style="background:#1a1a2e;color:#fff;padding:5px;text-align:center;">#</th><th style="background:#1a1a2e;color:#fff;padding:5px;text-align:center;">Código</th><th style="background:#1a1a2e;color:#fff;padding:5px;text-align:center;">Hora</th><th style="background:#1a1a2e;color:#fff;padding:5px;text-align:center;">Resultado</th></tr>
+        ${tramosHTML}
+      </table>
+    </div>
+    <div style="margin-bottom:8px;padding:8px 10px;background:#fafafa;border:1px solid #e0e0e5;border-radius:8px;">
+      <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#ff6b35;margin-bottom:6px;">Cierre</div>
+      <div style="display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px;">ML total: <b>${mlTotal} ML</b></div>
+      <div style="display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px;">Horas: <b>${horas} h</b></div>
+      <div style="display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px;">M3: <b>${STATE.m3Total} m³</b></div>
+      <div style="background:#fff;border:2px solid #ff6b35;border-radius:6px;padding:6px;font-size:11px;font-weight:700;text-align:center;margin-top:4px;">${mlTotal>=META_ML?'✅ Meta cumplida':'❌ No cumplida'}</div>
+    </div>
+    <div style="margin-top:12px;padding-top:6px;border-top:2px solid #1a1a2e;display:flex;justify-content:space-between;font-size:10px;">
+      <div>Firma: ______________________</div>
+      <div>Este documento es respaldo del cierre.</div>
+    </div>
+  </div>`;
+
+  const element = document.createElement('div');
+  element.innerHTML = htmlContent;
+  element.style.position = 'fixed';
+  element.style.left = '-9999px';
+  element.style.top = '0';
+  document.body.appendChild(element);
+  const opt = {
+    margin:       0.5,
+    filename:     `Cierre_Jornada_${STATE.placa}_${new Date().toISOString().slice(0,10)}.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true },
+    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+  };
+  try {
+    await html2pdf().set(opt).from(element).save();
+  } catch (e) {
+    console.error('Error generando PDF:', e);
+    toast('Error al generar el PDF');
+  } finally {
+    document.body.removeChild(element);
+  }
+}
+
+/* ==================== REINICIAR APP ==================== */
 function reiniciarApp(){
   clearInterval(timerHandle);
   STATE = {placa:null, contratista:null, barrio:null, gps:null, horaInicio:null, horaFin:null, inspector:null, tramos:[], sueltos:[], tramoActivoId:null, cerrada:false, actividadCount:0, bitacoraInterna:"", m3Total:0};
-  segRestantes=JORNADA_SEG; nuevoSentido=null; tempSentido={desob:null}; tempTipoNovedad=null; tempCausa=null; tempRegresa=null; tempApto=null;
+  segRestantes=JORNADA_SEG;
+  tempTipoNovedad=null; tempCausa=null; tempRegresa=null;
+  tempOpcionCierre=null;
+  limpiarEstado();
   document.getElementById('screen-cierre').classList.remove('active');
   document.getElementById('screen-dashboard').classList.remove('active');
   document.getElementById('screen-apertura').classList.add('active');
@@ -743,34 +1159,71 @@ function reiniciarApp(){
   actualizarReloj(); initGPSApertura(); actualizarEstadoSync();
 }
 
-/* ==================== HOJA DE CONTINGENCIA ==================== */
-function generarHojaContingencia(){
-  const ventana = window.open('', '_blank', 'width=800,height=1000');
-  const fecha = STATE.horaInicio ? new Date(STATE.horaInicio).toLocaleDateString('es-CO') : new Date().toLocaleDateString('es-CO');
-  const turno = STATE.horaInicio ? (new Date(STATE.horaInicio).getHours() >= 6 && new Date(STATE.horaInicio).getHours() < 18 ? 'D' : 'N') : '';
-  const mlTotal = calcularMLTotal();
-  const horas = STATE.horaInicio && STATE.horaFin ? round1((new Date(STATE.horaFin)-new Date(STATE.horaInicio))/3600000) : '';
-  const tramosHTML = STATE.tramos.map((t,i)=>{
-    const resultado = t.cierre ? (t.cierre.apto==='SI' ? `✅ APTO → ${t.cierre.ml} ML` : `❌ NO APTO → ${t.cierre.obs||''}`) : '⚠️ SIN CERRAR';
-    return `<tr><td>${i+1}</td><td>#${t.tramo}</td><td>${t.horaInicio?fmtHora(t.horaInicio):''}</td><td>${resultado}</td></tr>`;
-  }).join('');
-  ventana.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Hoja de Contingencia</title>
-  <style>@page{size:letter;margin:6mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,sans-serif;background:#fff;padding:10mm 8mm}
-  .header{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:6px;border-bottom:3px solid #1a1a2e}.header-icon{width:35px;height:35px;background:#1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}.header-title{font-size:14px;font-weight:800;color:#1a1a2e}.header-sub{font-size:9px;color:#8a8a9a}
-  .seccion{margin-bottom:8px;padding:8px 10px;background:#fafafa;border:1px solid #e0e0e5;border-radius:8px}.seccion-titulo{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#ff6b35;margin-bottom:6px}.fila{display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px}.tabla{width:100%;border-collapse:collapse;font-size:10px}.tabla th{background:#1a1a2e;color:#fff;padding:5px;text-align:center}.tabla td{padding:4px 5px;border-bottom:1px solid #e0e0e5;text-align:center}.resultado-box{background:#fff;border:2px solid #ff6b35;border-radius:6px;padding:6px;font-size:11px;font-weight:700;text-align:center;margin-top:4px}.btn-imprimir{background:#ff6b35;color:#fff;border:none;padding:12px 24px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px}@media print{.btn-imprimir{display:none}}</style>
-  </head><body>
-  <div class="header"><div class="header-icon">📋</div><div><div class="header-title">HOJA DE CONTINGENCIA — JORNADA</div><div class="header-sub">Generada: ${new Date().toLocaleString('es-CO')} · Respaldar y archivar</div></div></div>
-  <div class="seccion"><div class="seccion-titulo">Datos del turno</div><div class="fila">Fecha: <b>${fecha}</b> | Placa: <b>${STATE.placa||'—'}</b> | Barrio: <b>${STATE.barrio||'—'}</b> | Turno: <b>${turno}</b></div><div class="fila">Inspector: <b>${STATE.inspector||'—'}</b> | Hora: <b>${STATE.horaInicio?fmtHora(STATE.horaInicio):'—'} a ${STATE.horaFin?fmtHora(STATE.horaFin):'—'}</b></div></div>
-  <div class="seccion"><div class="seccion-titulo">Tramos</div><table class="tabla"><tr><th>#</th><th>Código</th><th>Hora</th><th>Resultado</th></tr>${tramosHTML||'<tr><td colspan="4">Sin tramos</td></tr>'}</table></div>
-  <div class="seccion"><div class="seccion-titulo">Cierre</div><div class="fila">ML total: <b>${mlTotal} ML</b> | Horas: <b>${horas} h</b> | M3: <b>${STATE.m3Total} m³</b></div><div class="resultado-box">${mlTotal>=META_ML?'✅ Meta cumplida':'❌ No cumplida'}</div></div>
-  <div style="margin-top:12px;padding-top:6px;border-top:2px solid #1a1a2e;display:flex;justify-content:space-between;font-size:10px;"><div>Firma: ______________________</div><div>Este documento es respaldo del cierre.</div></div>
-  <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
-  </body></html>`);
-  ventana.document.close();
+/* ==================== CONEXIÓN / OFFLINE ==================== */
+function verificarConexion(){
+  const offlineEl = document.getElementById('offline-indicator');
+  if (!navigator.onLine) {
+    offlineEl.style.display = 'block';
+  } else {
+    offlineEl.style.display = 'none';
+  }
 }
+window.addEventListener('online', ()=>{
+  verificarConexion();
+  procesarCola();
+});
+window.addEventListener('offline', verificarConexion);
 
 /* ==================== INICIO ==================== */
-window.addEventListener('load', ()=>{ actualizarEstadoSync(); });
+window.addEventListener('load', ()=>{
+  cargarEstado();
+  if (STATE.horaInicio && !STATE.cerrada) {
+    // Restaurar dashboard
+    document.getElementById('screen-apertura').classList.remove('active');
+    document.getElementById('screen-dashboard').classList.add('active');
+    // Recalcular segRestantes
+    if (STATE.horaInicio) {
+      const elapsed = Math.floor((Date.now() - new Date(STATE.horaInicio).getTime()) / 1000);
+      segRestantes = Math.max(0, JORNADA_SEG - elapsed);
+    }
+    iniciarCronometro();
+    renderDashboard();
+    actualizarReloj();
+    actualizarEstadoSync();
+    verificarConexion();
+  } else {
+    actualizarEstadoSync();
+    verificarConexion();
+  }
+  // Intentar procesar cola al cargar
+  if (navigator.onLine) procesarCola();
+});
+
+/* ==================== UTILIDADES ==================== */
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2600); }
+function capitalizar(s){ if(!s) return s; return s.charAt(0).toUpperCase()+s.slice(1).toLowerCase(); }
+function nowISO(){ return new Date().toISOString(); }
+function fmtHora(iso){ const d=new Date(iso); return d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',hour12:true}); }
+function fmtHora24(iso){ const d=new Date(iso); return d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',hour12:false}); }
+function round1(n){ return Math.round(n * 10) / 10; }
+function getGPS(){
+  return new Promise((resolve)=>{
+    if(!navigator.geolocation){ resolve(null); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos=>resolve({lat:pos.coords.latitude,lng:pos.coords.longitude}),
+      ()=>resolve(null), {timeout:8000}
+    );
+  });
+}
+async function reverseGeocode(gps){
+  if(!gps) return "";
+  try{
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${gps.lat}&lon=${gps.lng}&format=json`);
+    const d = await r.json();
+    const a = d.address || {};
+    return capitalizar(a.suburb || a.neighbourhood || a.quarter || a.city_district || a.village || "");
+  }catch(e){ return ""; }
+}
 </script>
 </body>
 </html>
