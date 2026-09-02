@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Bitácora Preventiva</title>
-  <!-- html2pdf -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <style>
     :root{
@@ -39,25 +38,21 @@
     .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;}
     .chip{padding:10px 14px; border-radius:20px; background:var(--card2); border:1px solid var(--line); color:var(--text); font-size:14px; font-weight:500; cursor:pointer;}
     .chip.active{background:var(--accent); border-color:var(--accent); color:#fff;}
-    .ring-wrap{display:flex; flex-direction:column; align-items:center; padding:10px 0 6px; position:relative;}
-    svg.ring{width:170px; height:170px;}
-    .ring-center{position:relative; margin-top:-125px; width:170px; text-align:center; pointer-events:none;}
-    .ring-ml{font-size:28px; font-weight:700;}
-    .ring-time{font-size:13px; color:var(--sub); margin-top:2px;}
-    /* Iconos flotantes a los lados del anillo */
-    .ring-side-icons{
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
+    
+    /* Contenedor del anillo ajustado */
+    .ring-container{
       display: flex;
-      gap: 10px;
-      width: 100%;
-      justify-content: space-between;
-      padding: 0 5px;
-      pointer-events: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 10px 0;
+      padding: 10px;
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      flex-wrap: wrap;
     }
-    .ring-side-icon{
-      pointer-events: auto;
+    .ring-side-btn{
       background: var(--card2);
       border: 1px solid var(--line);
       border-radius: 50%;
@@ -70,10 +65,20 @@
       color: var(--text);
       cursor: pointer;
       transition: all 0.2s;
+      flex-shrink: 0;
     }
-    .ring-side-icon:active{transform: scale(0.9);}
-    .ring-side-icon.left{order:1;}
-    .ring-side-icon.right{order:2;}
+    .ring-side-btn:active{transform: scale(0.9);}
+    .ring-wrap{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    svg.ring{width:130px; height:130px;}
+    .ring-center{position:relative; margin-top:-100px; width:130px; text-align:center; pointer-events:none;}
+    .ring-ml{font-size:22px; font-weight:700;}
+    .ring-time{font-size:11px; color:var(--sub); margin-top:2px;}
+    
     .section-label{font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--sub); margin:18px 0 8px;}
     .grid-actions{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
     .action-btn{padding:16px 10px; border-radius:12px; background:var(--card2); border:1px solid var(--line); color:var(--text); font-size:14px; font-weight:600; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer;}
@@ -98,6 +103,7 @@
     .sync-status{text-align:center; font-size:12px; margin-bottom:10px; color:var(--good);}
     .tramo-sin-cerrar{color:var(--bad); font-weight:700;}
     .clipboard-box{background:var(--card2); padding:12px; border-radius:8px; white-space:pre-wrap; font-family:monospace; font-size:13px; max-height:300px; overflow-y:auto; border:1px solid var(--line);}
+    
     /* Estilos para cierre de tramo */
     .cierre-opciones {
       display: flex;
@@ -147,6 +153,64 @@
       border-radius: 6px;
       margin-bottom: 10px;
     }
+    
+    /* Hoja de contingencia - campos offline */
+    .offline-tramo-entry {
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      margin: 8px 0;
+      background: var(--card2);
+    }
+    .offline-tramo-entry .entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .offline-tramo-entry .entry-title {
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .offline-tramo-entry .entry-remove {
+      background: var(--bad);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .offline-tramo-entry .entry-field {
+      margin-bottom: 6px;
+    }
+    .offline-tramo-entry .entry-field label {
+      font-size: 11px;
+      margin: 0 0 2px;
+      display: block;
+    }
+    .offline-tramo-entry .entry-field input,
+    .offline-tramo-entry .entry-field select {
+      font-size: 13px;
+      padding: 8px;
+    }
+    .btn-add-offline-tramo {
+      background: var(--card2);
+      color: var(--accent);
+      border: 1px dashed var(--accent);
+      border-radius: 8px;
+      padding: 10px;
+      width: 100%;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      font-family: inherit;
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
@@ -183,24 +247,24 @@
   <div class="sync-status" id="sync-status">● Listo</div>
   <div class="offline-indicator" id="offline-indicator">📡 Sin conexión — los datos se guardarán localmente</div>
 
-  <!-- Contenedor del anillo con iconos laterales -->
-  <div class="ring-wrap">
-    <div class="ring-side-icons">
-      <button class="ring-side-icon left" id="btn-ver-bitacora" title="Ver bitácora completa" onclick="verBitacoraCompleta()">📋</button>
-      <button class="ring-side-icon right" id="btn-hoja-contingencia" title="Hoja de contingencia" onclick="generarHojaContingencia()">📄</button>
+  <!-- Contenedor del anillo con iconos a los lados -->
+  <div class="ring-container">
+    <button class="ring-side-btn" id="btn-ver-bitacora" title="Ver bitácora completa" onclick="verBitacoraCompleta()">📋</button>
+    
+    <div class="ring-wrap">
+      <svg class="ring" viewBox="0 0 170 170">
+        <circle cx="85" cy="85" r="72" fill="none" stroke="#242833" stroke-width="12"/>
+        <circle id="ring-progress" cx="85" cy="85" r="72" fill="none" stroke="var(--accent)" stroke-width="12"
+          stroke-linecap="round" stroke-dasharray="452" stroke-dashoffset="452" transform="rotate(-90 85 85)"/>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-ml" id="disp-ml">0 ML</div>
+        <div class="ring-time" id="disp-time">8:00 h</div>
+      </div>
     </div>
-    <svg class="ring" viewBox="0 0 170 170">
-      <circle cx="85" cy="85" r="72" fill="none" stroke="#242833" stroke-width="12"/>
-      <circle id="ring-progress" cx="85" cy="85" r="72" fill="none" stroke="var(--accent)" stroke-width="12"
-        stroke-linecap="round" stroke-dasharray="452" stroke-dashoffset="452" transform="rotate(-90 85 85)"/>
-    </svg>
-    <div class="ring-center">
-      <div class="ring-ml" id="disp-ml">0 ML</div>
-      <div class="ring-time" id="disp-time">8:00 h</div>
-    </div>
+    
+    <button class="ring-side-btn" id="btn-hoja-contingencia" title="Hoja de contingencia" onclick="generarHojaContingencia()">📄</button>
   </div>
-
-  <!-- Se quitaron los botones de abajo, ahora son iconos flotantes -->
 
   <div id="tramo-abierto-box"></div>
 
@@ -290,17 +354,17 @@
   <div class="modal">
     <button class="modal-close" onclick="cerrarModal('modal-cierre-tramo')">✕</button>
     <h3>Cerrar tramo</h3>
-    <p style="font-size:13px; color:var(--sub); margin-bottom:12px;">Selecciona una opción (clic en la tarjeta o en el campo) y completa el dato requerido.</p>
+    <p style="font-size:13px; color:var(--sub); margin-bottom:12px;">Selecciona una opción y completa el dato requerido.</p>
 
     <div class="cierre-opciones">
       <div class="cierre-opcion" id="opcion-cctv-si" onclick="seleccionarOpcionCierre('SI')">
-        <div class="opcion-titulo">📹 Apto CCTV</div>
-        <div class="opcion-ayuda">El tramo fue inspeccionado con CCTV y se puede medir en metros lineales.</div>
+        <div class="opcion-titulo">✅ Tramo limpio — Apto CCTV</div>
+        <div class="opcion-ayuda">El tramo quedó limpio y podrá ser inspeccionado por el equipo CCTV para su aprobación. Registra los metros lineales.</div>
         <input type="number" id="ct-ml" min="0" max="150" step="1" placeholder="ML (0-150)" disabled>
       </div>
       <div class="cierre-opcion" id="opcion-cctv-no" onclick="seleccionarOpcionCierre('NO')">
-        <div class="opcion-titulo">🚫 No apto CCTV</div>
-        <div class="opcion-ayuda">El tramo no fue apto para CCTV, describe el motivo en la observación.</div>
+        <div class="opcion-titulo">❌ Tramo no apto CCTV</div>
+        <div class="opcion-ayuda">El tramo no quedó limpio y no podrá ser inspeccionado por CCTV. Describe el motivo.</div>
         <input type="text" id="ct-obs" placeholder="Observación (obligatoria)" disabled>
       </div>
     </div>
@@ -395,10 +459,8 @@ function cargarEstado() {
     const data = localStorage.getItem(STATE_KEY);
     if (data) {
       const saved = JSON.parse(data);
-      // Solo restaurar si no se ha cerrado la jornada
       if (!saved.cerrada) {
         STATE = saved;
-        // Recalcular segRestantes según horaInicio
         if (STATE.horaInicio) {
           const elapsed = Math.floor((Date.now() - new Date(STATE.horaInicio).getTime()) / 1000);
           segRestantes = Math.max(0, JORNADA_SEG - elapsed);
@@ -470,12 +532,11 @@ async function enviarHitoRemoto(tipo, datos){
   actualizarEstadoSync();
 }
 
-/* ==================== REGISTRAR HITO (nuevo formato) ==================== */
+/* ==================== REGISTRAR HITO ==================== */
 function registrarHito(bloqueTexto){
   STATE.actividadCount++;
   const encabezado = generarEncabezado();
   const bloqueConNumero = bloqueTexto.replace('[Actividad del dia #; X]', `[Actividad del dia #; ${STATE.actividadCount}]`);
-  // Guardar en bitacoraInterna con encabezado incluido
   const textoCompleto = encabezado + '\n' + bloqueConNumero;
   if(STATE.bitacoraInterna === ""){ 
     STATE.bitacoraInterna = textoCompleto; 
@@ -757,7 +818,6 @@ async function registrarNovedad(){
   
   enviarHitoRemoto('novedad', {causa:tempCausa||tempTipoNovedad, regresa:tempRegresa, lat: gps?gps.lat:'', lng: gps?gps.lng:''});
   
-  // Cerrar jornada si es NO o FUERZA_MAYOR
   if(tempRegresa==='NO' || tempRegresa==='FUERZA_MAYOR'){
     clearInterval(timerHandle); 
     segRestantes=0; 
@@ -857,7 +917,7 @@ async function confirmarCierreTramo(){
   const gpsText = gps ? `${gps.lat},${gps.lng}` : 'sin GPS';
   registrarHito(`Cierre de tramo
 [Cierre tramo: ${activo.tramo}]
-[Apto CCTV: ${activo.cierre.apto}]
+[Tramo limpio apto CCTV: ${activo.cierre.apto}]
 [ML: ${activo.cierre.ml}]
 [Observación: ${activo.cierre.obs || 'N/A'}]
 [Horas: ${horasLimpieza}]
@@ -890,7 +950,6 @@ function abrirModal(id){
   document.getElementById(MODAL_MAP[id]).classList.add('active'); 
   if(id==='modal-m3') prefillM3Barrio();
   if(id==='modal-cierre-tramo'){
-    // Reiniciar estado del modal
     document.getElementById('ct-ml').value="";
     document.getElementById('ct-obs').value="";
     document.getElementById('opcion-cctv-si').classList.remove('seleccionada');
@@ -920,33 +979,45 @@ function copiarBitacoraCompleta(){
 
 /* ==================== HOJA DE CONTINGENCIA ==================== */
 function generarHojaContingencia(){
-  const ventana = window.open('', '_blank', 'width=800,height=1000');
+  const ventana = window.open('', '_blank', 'width=900,height=1200');
   const fecha = STATE.horaInicio ? new Date(STATE.horaInicio).toLocaleDateString('es-CO') : new Date().toLocaleDateString('es-CO');
   const turno = STATE.horaInicio ? (new Date(STATE.horaInicio).getHours() >= 6 && new Date(STATE.horaInicio).getHours() < 18 ? 'D' : 'N') : '';
   const mlTotal = calcularMLTotal();
   const horas = STATE.horaInicio && STATE.horaFin ? round1((new Date(STATE.horaFin)-new Date(STATE.horaInicio))/3600000) : '';
+  
+  // Tramos registrados - mostrando claramente la dinámica
   let tramosHTML = STATE.tramos.map((t,i)=>{
-    const resultado = t.cierre ? (t.cierre.apto==='SI' ? `✅ APTO → ${t.cierre.ml} ML` : `❌ NO APTO → ${t.cierre.obs||''}`) : '⚠️ SIN CERRAR';
+    let resultado = '';
+    if(t.cierre){
+      if(t.cierre.apto==='SI'){
+        resultado = `✅ LIMPIO → ${t.cierre.ml} ML → CCTV puede inspeccionar`;
+      } else if(t.cierre.apto==='NO'){
+        resultado = `❌ NO LIMPIO → ${t.cierre.obs||''}`;
+      } else {
+        resultado = `⚠️ Cerrado por novedad → ${t.cierre.obs||''}`;
+      }
+    } else {
+      resultado = '⚠️ SIN CERRAR';
+    }
     return `<tr><td contenteditable="true">${i+1}</td><td contenteditable="true">#${t.tramo}</td><td contenteditable="true">${t.horaInicio?fmtHora24(t.horaInicio):''}</td><td contenteditable="true">${resultado}</td></tr>`;
   }).join('');
   if(!tramosHTML) tramosHTML = `<tr><td contenteditable="true">1</td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>`;
-  
-  // Eventos para mostrar en hoja (opcional)
-  const eventos = [...STATE.sueltos, ...STATE.tramos.flatMap(t=>t.eventos)];
-  const eventosHTML = eventos.length ? eventos.map(e=>{
-    const tipo = e.tipo === 'Desobstrucción' ? 'Desobstrucción' : `Novedad (${e.causa})`;
-    const regresa = e.regresa ? `Regresa: ${e.regresa}` : '';
-    return `<div style="font-size:10px;margin:3px 0;">- ${fmtHora(e.hora)} ${tipo} ${regresa}</div>`;
-  }).join('') : '<div style="font-size:10px;color:#888;">Sin eventos adicionales</div>';
   
   ventana.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Hoja de Contingencia</title>
   <style>@page{size:letter;margin:6mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,sans-serif;background:#fff;padding:10mm 8mm}
   .header{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:6px;border-bottom:3px solid #1a1a2e}.header-icon{width:35px;height:35px;background:#1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;}.header-title{font-size:14px;font-weight:800;color:#1a1a2e}.header-sub{font-size:9px;color:#8a8a9a}
   .seccion{margin-bottom:8px;padding:8px 10px;background:#fafafa;border:1px solid #e0e0e5;border-radius:8px}.seccion-titulo{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#ff6b35;margin-bottom:6px}.fila{display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px}.tabla{width:100%;border-collapse:collapse;font-size:10px}.tabla th{background:#1a1a2e;color:#fff;padding:5px;text-align:center}.tabla td{padding:4px 5px;border-bottom:1px solid #e0e0e5;text-align:center;background:white}.tabla td[contenteditable="true"]:focus{outline:2px solid #ff6b35;background:#fff3e0}.resultado-box{background:#fff;border:2px solid #ff6b35;border-radius:6px;padding:6px;font-size:11px;font-weight:700;text-align:center;margin-top:4px}.btn-imprimir{background:#ff6b35;color:#fff;border:none;padding:12px 24px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px}@media print{.btn-imprimir{display:none}}
   .editable-hint{font-size:9px;color:#888;margin-top:4px;text-align:center;border-top:1px dashed #ccc;padding-top:4px;}
+  .nota-importante{background:#fff8f0;border:2px solid #ff6b35;border-radius:8px;padding:10px;margin-bottom:8px;font-size:11px;}
+  .nota-importante .titulo{font-weight:800;color:#ff6b35;margin-bottom:4px;}
   </style>
   </head><body>
   <div class="header"><div class="header-icon">📋</div><div><div class="header-title">HOJA DE CONTINGENCIA — JORNADA</div><div class="header-sub">Generada: ${new Date().toLocaleString('es-CO')} · Campos editables para uso offline</div></div></div>
+  <div class="nota-importante">
+    <div class="titulo">📌 IMPORTANTE — Dinámica de tramos:</div>
+    Los tramos marcados como <b>"✅ LIMPIO"</b> quedaron limpios y podrán ser inspeccionados por el equipo CCTV para su aprobación.<br>
+    Los tramos marcados como <b>"❌ NO LIMPIO"</b> no quedaron limpios y no podrán ser inspeccionados por CCTV hasta que se realice trabajo adicional.
+  </div>
   <div class="seccion"><div class="seccion-titulo">Datos del turno</div>
     <div class="fila"><span>Fecha:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${fecha}</span></div>
     <div class="fila"><span>Placa:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${STATE.placa||'—'}</span></div>
@@ -956,12 +1027,11 @@ function generarHojaContingencia(){
     <div class="fila"><span>Hora inicio:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${STATE.horaInicio?fmtHora24(STATE.horaInicio):'—'}</span></div>
     <div class="fila"><span>Hora fin:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${STATE.horaFin?fmtHora24(STATE.horaFin):'—'}</span></div>
   </div>
-  <div class="seccion"><div class="seccion-titulo">Tramos</div>
+  <div class="seccion"><div class="seccion-titulo">Tramos registrados</div>
     <table class="tabla"><tr><th>#</th><th>Código</th><th>Hora</th><th>Resultado</th></tr>${tramosHTML}</table>
   </div>
-  <div class="seccion"><div class="seccion-titulo">Eventos adicionales</div>${eventosHTML}</div>
   <div class="seccion"><div class="seccion-titulo">Cierre</div>
-    <div class="fila"><span>ML total:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${mlTotal} ML</span></div>
+    <div class="fila"><span>ML total (tramos limpios):</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${mlTotal} ML</span></div>
     <div class="fila"><span>Horas:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${horas} h</span></div>
     <div class="fila"><span>M3:</span> <span contenteditable="true" style="font-weight:bold;background:white;padding:0 4px;">${STATE.m3Total} m³</span></div>
     <div class="resultado-box" contenteditable="true">${mlTotal>=META_ML?'✅ Meta cumplida':'❌ No cumplida'}</div>
@@ -978,7 +1048,6 @@ function generarHojaContingencia(){
 
 /* ==================== CIERRE JORNADA ==================== */
 function irACierreJornada(){
-  // Verificar si hay tramo activo sin cerrar
   const activo = STATE.tramos.find(t=>t.id===STATE.tramoActivoId && !t.cierre);
   if(activo){
     const confirmar = confirm("Hay un tramo activo sin cerrar. ¿Desea cerrar la jornada de todas formas? El tramo quedará sin cerrar.");
@@ -1024,9 +1093,11 @@ function renderResumen(){
       if(t.cierre){
         let detalle = '';
         if(t.cierre.apto==='SI'){
-          detalle = `CCTV ✅ · ${t.cierre.ml} ML`;
+          detalle = `✅ LIMPIO · ${t.cierre.ml} ML · CCTV puede inspeccionar`;
+        } else if(t.cierre.apto==='NO'){
+          detalle = `❌ NO LIMPIO · ${t.cierre.obs || 'Sin observación'}`;
         } else {
-          detalle = `CCTV ❌ · ${t.cierre.obs || 'Sin observación'}`;
+          detalle = `Cerrado por novedad · ${t.cierre.obs || ''}`;
         }
         d.innerHTML = `<span>${t.tramo}</span><strong>${detalle}</strong>`;
       } else {
@@ -1034,18 +1105,6 @@ function renderResumen(){
       }
       tramosBox.appendChild(d);
     });
-  }
-  
-  // Mostrar eventos sueltos en resumen si hay
-  if(evs.length > 0){
-    const evsBox = document.createElement('div');
-    evsBox.className = 'card';
-    evsBox.style.marginTop = '10px';
-    evsBox.innerHTML = '<div class="section-label">Eventos</div>';
-    evs.forEach(e=>{
-      evsBox.innerHTML += `<div class="summary-line"><span>${fmtHora(e.hora)} ${e.tipo}${e.causa?' - '+e.causa:''}${e.regresa?' (Regresa: '+e.regresa+')':''}</span></div>`;
-    });
-    tramosBox.after(evsBox);
   }
 }
 function abrirModalConfirmarCierre(){
@@ -1077,14 +1136,26 @@ async function generarPDFCierre() {
   const turno = STATE.horaInicio ? (new Date(STATE.horaInicio).getHours() >= 6 && new Date(STATE.horaInicio).getHours() < 18 ? 'D' : 'N') : '';
   const mlTotal = calcularMLTotal();
   const horas = STATE.horaInicio && STATE.horaFin ? round1((new Date(STATE.horaFin)-new Date(STATE.horaInicio))/3600000) : '';
+  
   let tramosHTML = STATE.tramos.map((t,i)=>{
-    const resultado = t.cierre ? (t.cierre.apto==='SI' ? `✅ APTO → ${t.cierre.ml} ML` : `❌ NO APTO → ${t.cierre.obs||''}`) : '⚠️ SIN CERRAR';
+    let resultado = '';
+    if(t.cierre){
+      if(t.cierre.apto==='SI'){
+        resultado = `✅ LIMPIO → ${t.cierre.ml} ML → CCTV puede inspeccionar`;
+      } else if(t.cierre.apto==='NO'){
+        resultado = `❌ NO LIMPIO → ${t.cierre.obs||'Sin observación'}`;
+      } else {
+        resultado = `⚠️ Cerrado por novedad → ${t.cierre.obs||''}`;
+      }
+    } else {
+      resultado = '⚠️ SIN CERRAR';
+    }
     return `<tr><td>${i+1}</td><td>#${t.tramo}</td><td>${t.horaInicio?fmtHora24(t.horaInicio):''}</td><td>${resultado}</td></tr>`;
   }).join('');
   if(!tramosHTML) tramosHTML = `<tr><td colspan="4">Sin tramos</td></tr>`;
 
   const htmlContent = `
-  <div id="pdf-cierre" style="font-family:Inter, sans-serif;background:#fff;padding:10mm 8mm;max-width:100%;">
+  <div id="pdf-cierre" style="font-family:Inter, sans-serif;background:#fff;padding:10mm 8mm;max-width:100%;color:#000;">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:6px;border-bottom:3px solid #1a1a2e;">
       <div style="width:35px;height:35px;background:#1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;">📋</div>
       <div><div style="font-size:14px;font-weight:800;color:#1a1a2e;">HOJA DE CONTINGENCIA — JORNADA</div><div style="font-size:9px;color:#8a8a9a;">Cierre automático · ${new Date().toLocaleString('es-CO')}</div></div>
@@ -1108,7 +1179,7 @@ async function generarPDFCierre() {
     </div>
     <div style="margin-bottom:8px;padding:8px 10px;background:#fafafa;border:1px solid #e0e0e5;border-radius:8px;">
       <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#ff6b35;margin-bottom:6px;">Cierre</div>
-      <div style="display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px;">ML total: <b>${mlTotal} ML</b></div>
+      <div style="display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px;">ML total (tramos limpios): <b>${mlTotal} ML</b></div>
       <div style="display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px;">Horas: <b>${horas} h</b></div>
       <div style="display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:4px;">M3: <b>${STATE.m3Total} m³</b></div>
       <div style="background:#fff;border:2px solid #ff6b35;border-radius:6px;padding:6px;font-size:11px;font-weight:700;text-align:center;margin-top:4px;">${mlTotal>=META_ML?'✅ Meta cumplida':'❌ No cumplida'}</div>
@@ -1119,26 +1190,36 @@ async function generarPDFCierre() {
     </div>
   </div>`;
 
-  const element = document.createElement('div');
-  element.innerHTML = htmlContent;
-  element.style.position = 'fixed';
-  element.style.left = '-9999px';
-  element.style.top = '0';
-  document.body.appendChild(element);
+  // Crear contenedor visible temporalmente para que html2pdf funcione
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.left = '0';
+  container.style.top = '0';
+  container.style.width = '800px';
+  container.style.zIndex = '-9999';
+  container.style.opacity = '0.01';
+  container.style.pointerEvents = 'none';
+  container.innerHTML = htmlContent;
+  document.body.appendChild(container);
+  
   const opt = {
     margin:       0.5,
     filename:     `Cierre_Jornada_${STATE.placa}_${new Date().toISOString().slice(0,10)}.pdf`,
     image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2, useCORS: true },
+    html2canvas:  { scale: 2, useCORS: true, logging: false },
     jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
   };
+  
   try {
-    await html2pdf().set(opt).from(element).save();
+    // Esperar un poco para que se renderice
+    await new Promise(resolve => setTimeout(resolve, 300));
+    await html2pdf().set(opt).from(container).save();
+    toast('✅ PDF generado correctamente');
   } catch (e) {
     console.error('Error generando PDF:', e);
-    toast('Error al generar el PDF');
+    toast('Error al generar el PDF: ' + e.message);
   } finally {
-    document.body.removeChild(element);
+    document.body.removeChild(container);
   }
 }
 
@@ -1178,10 +1259,8 @@ window.addEventListener('offline', verificarConexion);
 window.addEventListener('load', ()=>{
   cargarEstado();
   if (STATE.horaInicio && !STATE.cerrada) {
-    // Restaurar dashboard
     document.getElementById('screen-apertura').classList.remove('active');
     document.getElementById('screen-dashboard').classList.add('active');
-    // Recalcular segRestantes
     if (STATE.horaInicio) {
       const elapsed = Math.floor((Date.now() - new Date(STATE.horaInicio).getTime()) / 1000);
       segRestantes = Math.max(0, JORNADA_SEG - elapsed);
@@ -1195,7 +1274,6 @@ window.addEventListener('load', ()=>{
     actualizarEstadoSync();
     verificarConexion();
   }
-  // Intentar procesar cola al cargar
   if (navigator.onLine) procesarCola();
 });
 
