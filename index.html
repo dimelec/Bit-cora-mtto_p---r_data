@@ -2,178 +2,530 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111827">
+
   <title>Mtto Preventivo</title>
+
   <style>
-    *{box-sizing:border-box}
-    body{margin:0;background:#f3f4f6;color:#111827;font-family:Arial,sans-serif}
-    .app{max-width:560px;margin:auto;min-height:100vh;background:#fff;padding:22px 18px 40px}
-    h1{font-size:24px;margin:0 0 28px}
-    label{display:block;font-weight:700;margin:20px 0 8px}
-    select,button{width:100%;min-height:54px;border-radius:12px;font-size:17px}
-    select{padding:0 14px;border:1px solid #cbd5e1;background:#fff;color:#111827}
-    select:disabled{background:#f8fafc;color:#64748b}
-    button{margin-top:28px;border:0;background:#111827;color:#fff;font-weight:700}
-    button:disabled{background:#cbd5e1;color:#64748b}
-    .estado{min-height:24px;margin-top:10px;font-size:14px;color:#475569}
-    .error{color:#b91c1c}
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #f3f4f6;
+      color: #111827;
+      font-family: Arial, sans-serif;
+    }
+
+    .app {
+      max-width: 560px;
+      margin: auto;
+      min-height: 100vh;
+      background: white;
+      padding: 22px 18px 40px;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin: 0 0 28px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin: 20px 0 8px;
+    }
+
+    select,
+    button {
+      width: 100%;
+      min-height: 54px;
+      border-radius: 12px;
+      font-size: 17px;
+    }
+
+    select {
+      padding: 0 14px;
+      border: 1px solid #cbd5e1;
+      background: white;
+    }
+
+    select:disabled {
+      background: #f8fafc;
+      color: #64748b;
+    }
+
+    button {
+      margin-top: 28px;
+      border: 0;
+      background: #111827;
+      color: white;
+      font-weight: 700;
+    }
+
+    button:disabled {
+      background: #cbd5e1;
+      color: #64748b;
+    }
+
+    #estado {
+      min-height: 24px;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #475569;
+    }
+
+    .error {
+      color: #b91c1c !important;
+    }
   </style>
 </head>
+
 <body>
+
 <main class="app">
+
   <h1>#_Mtto_Preventivo</h1>
 
   <label for="placa">Placa</label>
+
   <select id="placa">
     <option value="">Selecciona placa...</option>
+
     <option value="KPN 603">KPN 603 — Vactor</option>
     <option value="LPK 666">LPK 666 — Vactor</option>
     <option value="WOW 047">WOW 047 — Vactor</option>
     <option value="GFP 750">GFP 750 — Vactor</option>
+
     <option value="GKV 830">GKV 830 — Succión</option>
     <option value="JLO 019">JLO 019 — Succión</option>
+
     <option value="LPL301">LPL301 — Ingemac</option>
     <option value="KPN 602">KPN 602 — Ingemac</option>
     <option value="THQ 592">THQ 592 — Ingemac</option>
+
     <option value="Otras">Otras — Otras</option>
   </select>
 
+
   <label for="tarea">Barrio / Tarea</label>
+
   <select id="tarea" disabled>
     <option value="">Primero selecciona una placa...</option>
   </select>
 
-  <div id="estado" class="estado"></div>
 
-  <button id="iniciar" disabled>Iniciar jornada</button>
+  <div id="estado"></div>
+
+
+  <button id="iniciar" disabled>
+    Iniciar jornada
+  </button>
+
 </main>
 
+
 <script>
-const API = 'https://script.google.com/macros/s/AKfycbwDy1V9_-gn0p4fNwVFnQJKJgYewW5ZfjmkRJpV8ckUwXzXWExAIgbuw0x-dUXORV4T/exec';
 
-const placa = document.getElementById('placa');
-const tarea = document.getElementById('tarea');
-const iniciar = document.getElementById('iniciar');
-const estado = document.getElementById('estado');
+const API =
+  'https://script.google.com/macros/s/AKfycbwDy1V9_-gn0p4fNwVFnQJKJgYewW5ZfjmkRJpV8ckUwXzXWExAIgbuw0x-dUXORV4T/exec';
 
-function fechaLocal(){
+
+const placa =
+  document.getElementById('placa');
+
+const tarea =
+  document.getElementById('tarea');
+
+const iniciar =
+  document.getElementById('iniciar');
+
+const estado =
+  document.getElementById('estado');
+
+
+function fechaLocal() {
+
   const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,'0');
-  const day = String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
+
+  const y =
+    d.getFullYear();
+
+  const m =
+    String(d.getMonth() + 1).padStart(2, '0');
+
+  const dia =
+    String(d.getDate()).padStart(2, '0');
+
+  return `${y}-${m}-${dia}`;
 }
 
-function mensaje(txt='', error=false){
-  estado.textContent = txt;
-  estado.className = 'estado' + (error ? ' error' : '');
+
+function mensaje(texto = '', error = false) {
+
+  estado.textContent = texto;
+
+  estado.className =
+    error ? 'error' : '';
 }
 
-function resetTarea(texto='Primero selecciona una placa...'){
+
+function resetTarea(
+  texto = 'Primero selecciona una placa...'
+) {
+
   tarea.innerHTML = '';
-  const o = document.createElement('option');
-  o.value = '';
-  o.textContent = texto;
-  tarea.appendChild(o);
+
+  const option =
+    document.createElement('option');
+
+  option.value = '';
+
+  option.textContent = texto;
+
+  tarea.appendChild(option);
+
   tarea.disabled = true;
+
   iniciar.disabled = true;
 }
 
-async function cargarTareas(){
-  const p = placa.value.trim();
-  if(!p){
-    resetTarea();
-    mensaje();
+
+/* ==========================================
+   RESPUESTA DEL MOTOR
+   ========================================== */
+
+function procesarRespuesta(data) {
+
+  if (!data || data.ok !== true) {
+
+    resetTarea(
+      'No hay programación disponible'
+    );
+
+    mensaje(
+      data && data.error
+        ? data.error
+        : 'Respuesta no válida del Motor.',
+      true
+    );
+
     return;
   }
 
-  resetTarea('Consultando programación...');
-  mensaje('Consultando programación...');
 
-  const u = new URL(API);
-  u.searchParams.set('action','tareasPorPlaca');
-  u.searchParams.set('placa',p);
-  u.searchParams.set('fecha',fechaLocal());
-  u.searchParams.set('_',Date.now());
+  /* ========================================
+     EXISTEN TAREAS
+     ======================================== */
 
-  try{
-    const resp = await fetch(u.toString(), {
-      method:'GET',
-      cache:'no-store',
-      redirect:'follow'
+  if (
+    Array.isArray(data.tareas) &&
+    data.tareas.length > 0
+  ) {
+
+    tarea.innerHTML = '';
+
+
+    const inicial =
+      document.createElement('option');
+
+    inicial.value = '';
+
+    inicial.textContent =
+      data.tareas.length === 1
+        ? 'Tarea asignada'
+        : 'Selecciona Barrio / Tarea...';
+
+    tarea.appendChild(inicial);
+
+
+    data.tareas.forEach(t => {
+
+      const option =
+        document.createElement('option');
+
+      option.value =
+        t.idTarea || '';
+
+      option.textContent =
+        t.nombre ||
+        t.barrio ||
+        t.idTarea;
+
+      option.dataset.barrio =
+        t.barrio || '';
+
+      tarea.appendChild(option);
     });
 
-    if(!resp.ok) throw new Error('HTTP '+resp.status);
 
-    const data = await resp.json();
+    tarea.disabled = false;
 
-    if(!data || data.ok !== true){
-      throw new Error(data && data.error ? data.error : 'Respuesta no válida');
+
+    /*
+       Si solo existe una Tarea,
+       no obligamos al operador
+       a seleccionarla.
+    */
+
+    if (data.tareas.length === 1) {
+
+      tarea.value =
+        data.tareas[0].idTarea;
+
+      iniciar.disabled = false;
     }
 
-    if(Array.isArray(data.tareas) && data.tareas.length){
-      tarea.innerHTML = '';
-      const primero = document.createElement('option');
-      primero.value = '';
-      primero.textContent = data.tareas.length === 1
-        ? 'Selecciona la Tarea...'
-        : 'Selecciona Barrio / Tarea...';
-      tarea.appendChild(primero);
 
-      data.tareas.forEach(t => {
-        const o = document.createElement('option');
-        o.value = t.idTarea || '';
-        o.textContent = t.nombre || t.barrio || t.idTarea;
-        o.dataset.barrio = t.barrio || '';
-        tarea.appendChild(o);
-      });
+    mensaje('');
 
-      tarea.disabled = false;
-
-      // Si solo hay una Tarea, la seleccionamos automáticamente.
-      if(data.tareas.length === 1){
-        tarea.value = data.tareas[0].idTarea;
-        iniciar.disabled = false;
-      }
-
-      mensaje('');
-      return;
-    }
-
-    if(data.usarGPS === true && data.contratista){
-      resetTarea('Sin Tarea activa — se usará ubicación');
-      mensaje('No hay una Tarea activa para esta placa.');
-      return;
-    }
-
-    resetTarea('No hay programación disponible');
-    mensaje('No fue posible determinar una Tarea para esta placa.', true);
-
-  }catch(err){
-    console.error('Consulta de Tareas:', err);
-    resetTarea('No fue posible cargar la programación');
-    mensaje('No fue posible cargar la programación. Intenta nuevamente.', true);
+    return;
   }
+
+
+  /* ========================================
+     CONTRATISTA SIN TAREAS
+     ======================================== */
+
+  if (
+    data.usarGPS === true &&
+    data.contratista
+  ) {
+
+    resetTarea(
+      'Sin Tarea activa — usar ubicación'
+    );
+
+    mensaje(
+      'No hay una Tarea activa para esta placa.'
+    );
+
+    return;
+  }
+
+
+  resetTarea(
+    'No hay programación disponible'
+  );
+
+  mensaje(
+    'No fue posible determinar una Tarea.',
+    true
+  );
 }
 
-placa.addEventListener('change', cargarTareas);
 
-tarea.addEventListener('change', () => {
-  iniciar.disabled = !tarea.value;
-});
+/* ==========================================
+   CONSULTA JSONP
+   ========================================== */
 
-iniciar.addEventListener('click', () => {
-  if(!placa.value || !tarea.value) return;
-  const op = tarea.options[tarea.selectedIndex];
-  alert(
-    'Prueba correcta:\\n\\n' +
-    'Placa: ' + placa.value + '\\n' +
-    'Barrio: ' + (op.dataset.barrio || op.textContent) + '\\n' +
-    'Tarea: ' + tarea.value +
-    '\\n\\nTodavía no se abrirá una jornada real.'
+function cargarTareas() {
+
+  const valorPlaca =
+    placa.value.trim();
+
+
+  if (!valorPlaca) {
+
+    resetTarea();
+
+    mensaje('');
+
+    return;
+  }
+
+
+  resetTarea(
+    'Consultando programación...'
   );
-});
+
+  mensaje(
+    'Consultando programación...'
+  );
+
+
+  /*
+    Creamos un callback único.
+    NO usamos fetch().
+  */
+
+  const callback =
+    'mtto_' +
+    Date.now();
+
+
+  const script =
+    document.createElement('script');
+
+
+  let terminado = false;
+
+
+  function limpiar() {
+
+    if (terminado) {
+      return;
+    }
+
+    terminado = true;
+
+    clearTimeout(timer);
+
+    try {
+      delete window[callback];
+    }
+    catch (e) {
+      window[callback] = undefined;
+    }
+
+    script.remove();
+  }
+
+
+  window[callback] =
+    function(data) {
+
+      limpiar();
+
+      procesarRespuesta(data);
+    };
+
+
+  script.onerror =
+    function() {
+
+      limpiar();
+
+      resetTarea(
+        'No fue posible cargar la programación'
+      );
+
+      mensaje(
+        'No fue posible conectar con el Motor.',
+        true
+      );
+    };
+
+
+  const params =
+    new URLSearchParams({
+
+      action:
+        'tareasPorPlaca',
+
+      placa:
+        valorPlaca,
+
+      fecha:
+        fechaLocal(),
+
+      callback:
+        callback,
+
+      _:
+        String(Date.now())
+
+    });
+
+
+  script.src =
+    API +
+    '?' +
+    params.toString();
+
+
+  document.head.appendChild(script);
+
+
+  const timer =
+    setTimeout(
+      function() {
+
+        limpiar();
+
+        resetTarea(
+          'Sin respuesta del Motor'
+        );
+
+        mensaje(
+          'El Motor no respondió a la consulta.',
+          true
+        );
+
+      },
+      12000
+    );
+}
+
+
+/* ==========================================
+   EVENTOS
+   ========================================== */
+
+placa.addEventListener(
+  'change',
+  cargarTareas
+);
+
+
+tarea.addEventListener(
+  'change',
+  function() {
+
+    iniciar.disabled =
+      !tarea.value;
+  }
+);
+
+
+/*
+  TODAVÍA NO REGISTRAMOS
+  UNA JORNADA REAL.
+*/
+
+iniciar.addEventListener(
+  'click',
+  function() {
+
+    if (
+      !placa.value ||
+      !tarea.value
+    ) {
+      return;
+    }
+
+
+    const opcion =
+      tarea.options[
+        tarea.selectedIndex
+      ];
+
+
+    const barrio =
+      opcion.dataset.barrio ||
+      opcion.textContent;
+
+
+    alert(
+      'CONEXIÓN CORRECTA\n\n' +
+
+      'Placa: ' +
+      placa.value +
+
+      '\nBarrio: ' +
+      barrio +
+
+      '\nTarea: ' +
+      tarea.value +
+
+      '\n\nTodavía no se abrirá una jornada real.'
+    );
+  }
+);
+
 </script>
+
 </body>
 </html>
