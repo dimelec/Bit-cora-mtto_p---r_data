@@ -81,8 +81,9 @@ input[readonly]{opacity:.75}
 .th{width:100%;max-height:30dvh;object-fit:contain;border-radius:12px;margin-top:12px}
 .lnk{background:none;border:0;color:var(--sub);font:inherit;font-size:13px;text-decoration:underline;padding:6px 0;cursor:pointer}
 #cv{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:14px;background:#000}
-.verify-warning{display:none;background:var(--warn);color:#fff;padding:12px 14px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:12px;cursor:pointer}
-.verify-warning.on{display:block}
+.auto-sync{display:none;background:#eef4ff;color:#1e3a8a;border:1px solid #c7d7fe;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:12px;text-align:center}
+.auto-sync.on{display:block}
+@media(prefers-color-scheme:dark){.auto-sync{background:#12203a;color:#a5c5ff;border-color:#1e3a5f}}
 .nov-step{display:none}
 .nov-step.on{display:block}
 .nov-step-label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--sub);margin:14px 0 8px;font-weight:800;border-left:3px solid var(--warn);padding-left:8px}
@@ -111,7 +112,7 @@ input[readonly]{opacity:.75}
 
 <section class="screen" id="s-dash">
   <div id="off">Sin conexión: los registros se envían al volver la señal</div>
-  <div id="verify-warn" class="verify-warning"></div>
+  <div id="auto-sync" class="auto-sync"></div>
   <div class="top">
     <div><div class="placa" id="d-placa"></div><div class="sub" id="d-barrio"></div><div class="sub" id="d-tarea"></div></div>
     <div style="text-align:right"><div id="d-rest" style="font-weight:700"></div><div id="sync">Guardado en teléfono</div><button class="lnk" id="btn-bit">Bitácora</button></div>
@@ -162,7 +163,7 @@ input[readonly]{opacity:.75}
 const FORM="https://docs.google.com/forms/d/e/1FAIpQLSfERpt4S-r5oDgoAsGMDFYq-RdhOiFsszFjjPTnA_Utm3ZSVQ/formResponse";
 const API="https://script.google.com/macros/s/AKfycbwDy1V9_-gn0p4fNwVFnQJKJgYewW5ZfjmkRJpV8ckUwXzXWExAIgbuw0x-dUXORV4T/exec";
 const MAX_H=10, ML_MAX=130;
-const K={j:"mtto_j_v3",q:"mtto_q_v3",d:"mtto_d_v3",v:"mtto_v_v3",t:"mtto_tab_v3",w:"mtto_w_v3"};
+const K={j:"mtto_j_v3",q:"mtto_q_v3",d:"mtto_d_v3",v:"mtto_v_v3",t:"mtto_tab_v3"};
 const PLACAS=[["KPN 603","Vactor"],["LPK 666","Vactor"],["WOW 047","Vactor"],["GFP 750","Vactor"],["GKV 830","Succión"],["JLO 019","Succión"],["LPL301","Ingemac"],["KPN 602","Ingemac"],["THQ 592","Ingemac"],["Otras","Otras"]];
 const CAUSAS=["Mecánica/Motor","Descarga de lodos","Fuerza mayor","Factor humano"];
 const DETALLES={"Mecánica/Motor":["Hidráulica","Mecánica/Motor","Succión/Presión","Eléctrica"],"Factor humano":["Falta de personal","Relevo de cuadrilla","Seguridad/SST","Otra"]};
@@ -389,7 +390,7 @@ $("btn-ini").onclick=()=>una(async()=>{
   buzz();render();show("s-dash");abrirPanel(D);
 });
 
-/* ---------- cola de envío con verificación diferida ---------- */
+/* ---------- cola con despacho único ---------- */
 function hito(tipo,datos,extra){
   const a={actionId:uid(),jid:J.id,tipo,datos,placa:J.placa,contratista:J.contratista,barrio:J.barrio,inspector:(extra&&extra.inspector)||"",at:new Date().toISOString()};
   const q=ls.get(K.q,[]);q.push(a);ls.set(K.q,q);sync();flush();
@@ -414,7 +415,7 @@ async function flush(){
       const a=q[0];
       if(verIds.has(a.actionId)){q.shift();ls.set(K.q,q);continue;}
       try{await enviar(a)}catch(e){break}
-      // Mover a despachados SIN perder payload: la verificación diferida lo usará.
+      // Mover a despachados SIN perder payload: verificación diferida lo usará.
       d.push(a);ls.set(K.d,d.slice(-200));
       q.shift();ls.set(K.q,q);
       sync();
@@ -422,7 +423,10 @@ async function flush(){
   }finally{flushing=false;sync();}
 }
 
-/* ---------- verificación diferida contra RAW ---------- */
+/* ---------- verificación silenciosa y reintento automático ---------- */
+const REINTENTO_HORAS=12;
+const VERIFICACION_INTERVALO_MS=5*60*1000;
+
 async function verificarActionId_(actionId){
   return new Promise(resolve=>{
     const cb="vfy_"+Date.now()+Math.floor(Math.random()*1e4);
@@ -436,58 +440,99 @@ async function verificarActionId_(actionId){
   });
 }
 async function verificarDespachados_(){
-  if(!navigator.onLine)return{checked:0,missed:0};
-  let d=ls.get(K.d,[]);
-  if(!d.length)return{checked:0,missed:0};
+  if(!navigator.onLine)return{checked:0,missed:0,resent:0,stale:0};
+  const ahora=Date.now();
+  const d=ls.get(K.d,[]);
+  if(!d.length){ocultarAvisoSync_();return{checked:0,missed:0,resent:0,stale:0};}
+
   const verIds=new Set(ls.get(K.v,[]));
   const sobrevivientes=[];
-  let missed=0,checked=0;
+  let missed=0, checked=0, resent=0, stale=0;
 
   for(const a of d){
-    if(checked>=15){sobrevivientes.push(a);continue;}
-    if(verIds.has(a.actionId)){continue;}
+    if(verIds.has(a.actionId))continue;
+    const edadHoras=(ahora-new Date(a.at||ahora).getTime())/3600000;
+
+    // Ventana normal: aún no toca verificar
+    if(checked>=10 && edadHoras<REINTENTO_HORAS){
+      sobrevivientes.push(a);
+      continue;
+    }
     checked++;
     const ok=await verificarActionId_(a.actionId);
-    if(ok){verIds.add(a.actionId);}
-    else{sobrevivientes.push(a);missed++;}
+    if(ok){verIds.add(a.actionId);continue;}
+
+    missed++;
+
+    if(edadHoras>=REINTENTO_HORAS && !a.__reenviado){
+      try{
+        await enviar(a);
+        a.__reenviado=true;
+        a.__reenviadoAt=new Date().toISOString();
+        resent++;
+        sobrevivientes.push(a);
+      }catch(e){
+        sobrevivientes.push(a);
+      }
+    } else if(edadHoras>=REINTENTO_HORAS*2 && a.__reenviado){
+      stale++;
+      sobrevivientes.push(a);
+    } else {
+      sobrevivientes.push(a);
+    }
   }
   ls.set(K.v,[...verIds].slice(-400));
   ls.set(K.d,sobrevivientes.slice(-200));
+  actualizarAvisoSync_(stale);
+  return{checked,missed,resent,stale};
+}
+function actualizarAvisoSync_(stale){
+  const el=$("auto-sync");if(!el)return;
+  if(stale>0){
+    el.textContent="Algunos registros antiguos no se han confirmado. El sistema seguirá intentando.";
+    el.classList.add("on");
+    return;
+  }
+  el.classList.remove("on");
+}
+function ocultarAvisoSync_(){const el=$("auto-sync");if(el)el.classList.remove("on");}
+function programarVerificacionAutomatica_(){
+  setInterval(()=>{
+    const d=ls.get(K.d,[]);
+    if(d.length>0 && navigator.onLine) verificarDespachados_();
+  }, VERIFICACION_INTERVALO_MS);
+}
 
-  if(missed>0)mostrarAvisoVerificacion_(missed);
-  else ocultarAvisoVerificacion_();
-  return{checked,missed};
-}
-function mostrarAvisoVerificacion_(n){
-  const el=$("verify-warn");if(!el)return;
-  el.textContent="⚠️ "+n+" evento"+(n===1?"":"s")+" aún no confirmado"+(n===1?"":"s")+" en el servidor. Toca para reintentar verificación.";
-  el.classList.add("on");
-  el.onclick=async()=>{
-    el.classList.remove("on");
-    toast("Verificando…");
-    await verificarDespachados_();
-  };
-}
-function ocultarAvisoVerificacion_(){
-  const el=$("verify-warn");if(el){el.classList.remove("on");el.onclick=null;}
-}
+/* ---------- sync message ---------- */
 function sync(){
-  const n=ls.get(K.q,[]).length,d=ls.get(K.d,[]).length,e=$("sync"),enLinea=navigator.onLine;
-  if(n){e.textContent=`Guardado · ${n} pendiente${n===1?"":"s"} de envío`;e.className="p"}
-  else if(d>0&&enLinea){e.textContent=`Despachado · ${d} por verificar`;e.className=""}
-  else if(enLinea){e.textContent="Confirmado en servidor";e.className=""}
-  else{e.textContent="Guardado en teléfono";e.className="p"}
-  $("off").style.display=enLinea?"none":"block";
+  const n=ls.get(K.q,[]).length;
+  const d=ls.get(K.d,[]).length;
+  const e=$("sync");
+  const enLinea=navigator.onLine;
+  if(!enLinea){
+    e.textContent="Guardado en teléfono";
+    e.className="p";
+    $("off").style.display="block";
+    return;
+  }
+  $("off").style.display="none";
+  if(n){e.textContent="Enviando…";e.className="";}
+  else if(d>0){e.textContent="Sincronizando";e.className="";}
+  else{e.textContent="Al día";e.className="";}
 }
 
 /* ---------- panel de la jornada ---------- */
 const mlTotal=()=>J.tramos.filter(t=>t.apto==="SI").reduce((s,t)=>s+t.ml,0);
 function render(){
   if(!J)return;
-  $("d-placa").textContent=J.placa;$("d-barrio").textContent=J.barrio;$("d-tarea").textContent=J.tarea?"Tarea: "+J.tarea:"Sin Tarea";
-  $("d-tr").textContent=J.tramos.length;$("d-ml").textContent=mlTotal();$("d-m3").textContent=J.m3;
+  $("d-placa").textContent=J.placa;
+  $("d-barrio").textContent=J.barrio;
+  $("d-tarea").textContent=J.tarea?"Tarea: "+J.tarea:"Sin Tarea";
+  $("d-tr").textContent=J.tramos.length;
+  $("d-ml").textContent=mlTotal();
+  $("d-m3").textContent=J.m3;
 
-  // ===== Máquina de estados visual A+B =====
+  // Máquina de estados: solo Desobstrucción y Novedad dependen del tramo abierto.
   const hayTramo=!!J.abierto;
   ["a-desob","a-nov"].forEach(id=>{
     const b=$(id);if(!b)return;
@@ -496,15 +541,25 @@ function render(){
     const m=b.querySelector(".motivo");
     if(m)m.textContent=hayTramo?"":"requiere tramo";
   });
-  const m3=$("a-m3");if(m3){m3.disabled=false;m3.classList.remove("locked");const m=m3.querySelector(".motivo");if(m)m.textContent="";}
+  const m3=$("a-m3");
+  if(m3){m3.disabled=false;m3.classList.remove("locked");const m=m3.querySelector(".motivo");if(m)m.textContent="";}
 
-  const bc=$("btn-cerrar");bc.textContent=J.abierto?"Cierra el tramo "+J.abierto.n+" para terminar":"Cerrar jornada";bc.classList.toggle("blk",!!J.abierto);
+  const bc=$("btn-cerrar");
+  bc.textContent=J.abierto?"Cierra el tramo "+J.abierto.n+" para terminar":"Cerrar jornada";
+  bc.classList.toggle("blk",!!J.abierto);
+
   $("d-ult").innerHTML=J.ultimo?`<button class="btn wa2" id="b-ult">Último mensaje ${esc(J.ultimo.folio)}: reenviar</button>`:"";
   if(J.ultimo)$("b-ult").onclick=()=>abrirPanel({...J.ultimo,foto:null,conFoto:false});
+
   const bx=$("d-tramo");
-  if(J.abierto){bx.innerHTML=`<div class="sub">Tramo abierto desde ${hhmm(J.abierto.ini)}</div><div class="tramo">${esc(J.abierto.n)}</div><button class="btn" id="b-ct">Cerrar tramo</button>`;$("b-ct").onclick=sheetCierreTramo}
-  else{bx.innerHTML=`<label for="n-tr">Número de tramo</label><input id="n-tr" inputmode="numeric" maxlength="6" placeholder="Hasta 6 números" autocomplete="off"><button class="btn" id="b-at" disabled>Abrir tramo</button>`;
-    $("n-tr").oninput=e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,6);$("b-at").disabled=!e.target.value};$("b-at").onclick=abrirTramo}
+  if(J.abierto){
+    bx.innerHTML=`<div class="sub">Tramo abierto desde ${hhmm(J.abierto.ini)}</div><div class="tramo">${esc(J.abierto.n)}</div><button class="btn" id="b-ct">Cerrar tramo</button>`;
+    $("b-ct").onclick=sheetCierreTramo;
+  } else {
+    bx.innerHTML=`<label for="n-tr">Número de tramo</label><input id="n-tr" inputmode="numeric" maxlength="6" placeholder="Hasta 6 números" autocomplete="off"><button class="btn" id="b-at" disabled>Abrir tramo</button>`;
+    $("n-tr").oninput=e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,6);$("b-at").disabled=!e.target.value};
+    $("b-at").onclick=abrirTramo;
+  }
   tick();
 }
 function tick(){
@@ -512,7 +567,10 @@ function tick(){
   if(ms<=0){autoCerrar();return}
   const h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000);
   $("d-rest").textContent=`Quedan ${h} h ${String(m).padStart(2,"0")} min`;
-  const f=1-ms/(MAX_H*3600000);$("d-bar").firstElementChild.style.width=(f*100)+"%";$("d-bar").classList.toggle("late",ms<=1800000);$("btn-cerrar").classList.toggle("late",ms<=1800000);
+  const f=1-ms/(MAX_H*3600000);
+  $("d-bar").firstElementChild.style.width=(f*100)+"%";
+  $("d-bar").classList.toggle("late",ms<=1800000);
+  $("btn-cerrar").classList.toggle("late",ms<=1800000);
   if(ms<=1800000&&!J.avisado){J.avisado=true;save();toast("Quedan 30 min: cierra la jornada")}
 }
 
@@ -520,9 +578,13 @@ function tick(){
 async function abrirTramo(){
   const n=$("n-tr").value.trim();if(!/^\d{1,6}$/.test(n)||J.abierto)return;
   if(J.tramos.some(t=>t.n===n)&&!await ask("Tramo ya cerrado","El tramo "+n+" ya se cerró en esta jornada. ¿Registrarlo otra vez?","Sí, abrir"))return;
-  una(async()=>{const g=await getGPS();
-    J.abierto={n,ini:new Date().toISOString()};log("Apertura de tramo "+n);save();
-    const D=reg("tramoInicio","AT","Apertura de tramo",{tramo:n,lat:g?g.lat:"",lng:g?g.lng:"",direccion:""},["Tramo: "+n,"GPS: "+(g?g.lat.toFixed(4)+", "+g.lng.toFixed(4):"sin GPS")]);buzz();render();abrirPanel(D)});
+  una(async()=>{
+    const g=await getGPS();
+    J.abierto={n,ini:new Date().toISOString()};
+    log("Apertura de tramo "+n);save();
+    const D=reg("tramoInicio","AT","Apertura de tramo",{tramo:n,lat:g?g.lat:"",lng:g?g.lng:"",direccion:""},["Tramo: "+n,"GPS: "+(g?g.lat.toFixed(4)+", "+g.lng.toFixed(4):"sin GPS")]);
+    buzz();render();abrirPanel(D);
+  });
 }
 let ct={a:null};
 function sheetCierreTramo(){
@@ -532,31 +594,56 @@ function sheetCierreTramo(){
   <div id="ct-si-b" style="display:none"><label for="ct-ml">ML (1 a ${ML_MAX})</label><input id="ct-ml" type="number" inputmode="numeric" min="1" max="${ML_MAX}"></div>
   <div id="ct-no-b" style="display:none"><label for="ct-ob">Observación</label><input id="ct-ob" placeholder="Por qué no es apto"></div>
   <div class="err" id="ct-e">El ML debe estar entre 1 y ${ML_MAX}</div>
-  <button class="btn" id="ct-ok" disabled>Confirmar cierre</button><button class="btn sec" onclick="cerrarSheet()">Cancelar</button>`);
-  const v=()=>{let ok=false;const e=$("ct-e");e.classList.remove("on");
+  <button class="btn" id="ct-ok" disabled>Confirmar cierre</button>
+  <button class="btn sec" onclick="cerrarSheet()">Cancelar</button>`);
+  const v=()=>{
+    let ok=false;const e=$("ct-e");e.classList.remove("on");
     if(ct.a==="SI"){const m=Number($("ct-ml").value);ok=Number.isInteger(m)&&m>=1&&m<=ML_MAX;if($("ct-ml").value&&!ok)e.classList.add("on")}
     else if(ct.a==="NO")ok=$("ct-ob").value.trim().length>0;
-    $("ct-ok").disabled=!ok};
+    $("ct-ok").disabled=!ok;
+  };
   $("ct-si").onclick=()=>{ct.a="SI";$("ct-si").classList.add("sel");$("ct-no").classList.remove("sel","no");$("ct-si-b").style.display="block";$("ct-no-b").style.display="none";v()};
   $("ct-no").onclick=()=>{ct.a="NO";$("ct-no").classList.add("sel","no");$("ct-si").classList.remove("sel");$("ct-no-b").style.display="block";$("ct-si-b").style.display="none";v()};
   $("ct-ml").oninput=v;$("ct-ob").oninput=v;
   $("ct-ok").onclick=()=>una(async()=>{
-    if(!J.abierto)return;const t=J.abierto,si=ct.a==="SI",ml=si?Number($("ct-ml").value):0,ob=si?"":cap($("ct-ob").value.trim());
-    J.tramos.push({n:t.n,apto:ct.a,ml,obs:ob,ini:t.ini,fin:new Date().toISOString()});J.abierto=null;log(`Cierre de tramo ${t.n}: ${si?"APTO "+ml+" ML":"NO APTO - "+ob}`);save();
-    const D=reg("tramoCierre","CT","Cierre de tramo",{tramo:t.n,aptoCCTV:ct.a,ml,observacion:ob},["Tramo: "+t.n,"Apto CCTV: "+ct.a,si?"ML: "+ml:"Observación: "+ob]);cerrarSheet();buzz();render();abrirPanel(D)});
+    if(!J.abierto)return;
+    const t=J.abierto,si=ct.a==="SI",ml=si?Number($("ct-ml").value):0,ob=si?"":cap($("ct-ob").value.trim());
+    J.tramos.push({n:t.n,apto:ct.a,ml,obs:ob,ini:t.ini,fin:new Date().toISOString()});
+    J.abierto=null;
+    log(`Cierre de tramo ${t.n}: ${si?"APTO "+ml+" ML":"NO APTO - "+ob}`);
+    save();
+    const D=reg("tramoCierre","CT","Cierre de tramo",{tramo:t.n,aptoCCTV:ct.a,ml,observacion:ob},["Tramo: "+t.n,"Apto CCTV: "+ct.a,si?"ML: "+ml:"Observación: "+ob]);
+    cerrarSheet();buzz();render();abrirPanel(D);
+  });
 }
 
 /* ---------- desobstrucción, agua, novedad ---------- */
-$("a-desob").onclick=()=>{if(!J.abierto)return;
+$("a-desob").onclick=()=>{
+  if(!J.abierto)return;
   sheet(`<h3>Desobstrucción</h3><p>Se registra sobre el tramo abierto ${esc(J.abierto.n)}.</p><button class="btn" id="ds-ok">Registrar desobstrucción</button><button class="btn sec" onclick="cerrarSheet()">Cancelar</button>`);
-  $("ds-ok").onclick=()=>una(async()=>{if(!J.abierto)return;log("Desobstrucción tramo "+J.abierto.n);save();const D=reg("desob","DE","Desobstrucción",{tramo:J.abierto.n},["Tramo: "+J.abierto.n]);cerrarSheet();buzz();abrirPanel(D)})};
-
+  $("ds-ok").onclick=()=>una(async()=>{
+    if(!J.abierto)return;
+    log("Desobstrucción tramo "+J.abierto.n);save();
+    const D=reg("desob","DE","Desobstrucción",{tramo:J.abierto.n},["Tramo: "+J.abierto.n]);
+    cerrarSheet();buzz();abrirPanel(D);
+  });
+};
 $("a-m3").onclick=()=>{
   sheet(`<h3>Carga de agua</h3><label for="m-v">Metros cúbicos (m³)</label><input id="m-v" type="number" inputmode="decimal" min="0" step="0.1" placeholder="Hidrante fuera de servicio: coloca 0"><div class="hint">Hidrante fuera de servicio: coloca 0.</div><div id="m-zero" style="display:none;color:var(--bad);font-weight:800;margin-top:8px">Se registrará: hidrante fuera de servicio</div><button class="btn" id="m-ok" disabled>Registrar carga</button><button class="btn sec" onclick="cerrarSheet()">Cancelar</button>`);
   $("m-v").oninput=()=>{const raw=$("m-v").value.trim(),v=Number(raw),z=raw!==""&&v===0;$("m-zero").style.display=z?"block":"none";$("m-ok").disabled=raw===""||v<0};
-  $("m-ok").onclick=()=>una(async()=>{const raw=$("m-v").value.trim(),v=Number(raw);if(raw===""||v<0)return;const fuera=v===0,g=await getGPS();J.m3=Math.round((J.m3+v)*10)/10;J.cargasAgua=J.cargasAgua||[];J.cargasAgua.push({at:new Date().toISOString(),valor:v,hidranteFueraServicio:fuera,lat:g?g.lat:"",lng:g?g.lng:""});log(fuera?"Carga de agua: hidrante fuera de servicio":`Carga de agua ${v} m³`);save();const D=reg("m3","M3","Carga de agua",{valor:v,hidranteFueraServicio:fuera,lat:g?g.lat:"",lng:g?g.lng:""},fuera?["Hidrante fuera de servicio"]:["M3: "+v]);cerrarSheet();buzz();render();abrirPanel(D)})};
+  $("m-ok").onclick=()=>una(async()=>{
+    const raw=$("m-v").value.trim(),v=Number(raw);if(raw===""||v<0)return;
+    const fuera=v===0,g=await getGPS();
+    J.m3=Math.round((J.m3+v)*10)/10;
+    J.cargasAgua=J.cargasAgua||[];
+    J.cargasAgua.push({at:new Date().toISOString(),valor:v,hidranteFueraServicio:fuera,lat:g?g.lat:"",lng:g?g.lng:""});
+    log(fuera?"Carga de agua: hidrante fuera de servicio":`Carga de agua ${v} m³`);save();
+    const D=reg("m3","M3","Carga de agua",{valor:v,hidranteFueraServicio:fuera,lat:g?g.lat:"",lng:g?g.lng:""},fuera?["Hidrante fuera de servicio"]:["M3: "+v]);
+    cerrarSheet();buzz();render();abrirPanel(D);
+  });
+};
 
-/* ===== Novedad progresiva A+B ===== */
+/* ---------- novedad progresiva ---------- */
 let nv={c:null,d:null,r:null};
 $("a-nov").onclick=()=>{
   if(!J.abierto)return;
@@ -564,9 +651,7 @@ $("a-nov").onclick=()=>{
   sheet(`<h3>Novedad</h3>
     <div class="nov-step on" id="nov-s1">
       <div class="nov-step-label">¿Qué tipo de novedad?</div>
-      <div class="chips">
-        ${CAUSAS.map((c,i)=>`<button class="chip" data-c="${i}">${esc(c)}</button>`).join("")}
-      </div>
+      <div class="chips">${CAUSAS.map((c,i)=>`<button class="chip" data-c="${i}">${esc(c)}</button>`).join("")}</div>
     </div>
     <div class="nov-step" id="nov-s2">
       <div class="nov-step-label">¿Qué ocurrió?</div>
@@ -602,7 +687,6 @@ $("a-nov").onclick=()=>{
     $("nov-resumen").innerHTML=p.join("<br>");
   };
 
-  // Paso 1
   document.querySelectorAll("#sheet [data-c]").forEach(b=>b.onclick=()=>{
     nv={c:CAUSAS[b.dataset.c],d:null,r:null};
     document.querySelectorAll("#sheet [data-c]").forEach(x=>x.classList.toggle("sel",x===b));
@@ -621,11 +705,9 @@ $("a-nov").onclick=()=>{
     pintarResumen();
     verPaso(3);
   });
-
   $("nov-s2-volver").onclick=()=>{nv.d=null;verPaso(1)};
   $("nov-s3-volver").onclick=()=>{nv.r=null;if(DETALLES[nv.c])verPaso(2);else verPaso(1)};
   $("nov-s4-volver").onclick=()=>verPaso(1);
-
   $("nv-si").onclick=()=>{nv.r="SI";$("nv-si").classList.add("sel");$("nv-no").classList.remove("sel","no");ejecutarNovedad(false)};
   $("nv-no").onclick=()=>{nv.r="NO";$("nv-no").classList.add("sel","no");$("nv-si").classList.remove("sel");ejecutarNovedad(false)};
   $("nov-fm-ok").onclick=()=>ejecutarNovedad(true);
@@ -636,11 +718,18 @@ $("a-nov").onclick=()=>{
     if((fuerza||r==="NO")&&!await ask(fuerza?"Fuerza mayor":"Regresa: NO","Se cerrará el tramo abierto como NO apto y se pasará al cierre de la jornada.","Continuar"))return;
     una(async()=>{
       const c=nv.c,d=nv.d||"";
-      J.novedades.push({c,detalle:d,r});log(`Novedad ${c}${d?" - "+d:""} - Regresa ${r}`);
+      J.novedades.push({c,detalle:d,r});
+      log(`Novedad ${c}${d?" - "+d:""} - Regresa ${r}`);
       const lineas=["Causa: "+c].concat(d?["Detalle: "+d]:[]).concat(fuerza?[]:["Regresa: "+r]);
       const nd=reg("novedad","NV","Novedad",{causa:c,tipo:c,detalle:d,regresa:r,fuerzaMayor:fuerza},lineas);
       if(fuerza||r==="NO"){
-        if(J.abierto){const t=J.abierto,obs=d?c+" - "+d:c;J.tramos.push({n:t.n,apto:"NO",ml:0,obs,ini:t.ini,fin:new Date().toISOString()});J.abierto=null;log(`Cierre de tramo ${t.n}: NO APTO - ${obs}`);hito("tramoCierre",{tramo:t.n,aptoCCTV:"NO",ml:0,observacion:obs,origenCierre:fuerza?"FUERZA_MAYOR":"NOVEDAD_NO_REGRESA"})}
+        if(J.abierto){
+          const t=J.abierto,obs=d?c+" - "+d:c;
+          J.tramos.push({n:t.n,apto:"NO",ml:0,obs,ini:t.ini,fin:new Date().toISOString()});
+          J.abierto=null;
+          log(`Cierre de tramo ${t.n}: NO APTO - ${obs}`);
+          hito("tramoCierre",{tramo:t.n,aptoCCTV:"NO",ml:0,observacion:obs,origenCierre:fuerza?"FUERZA_MAYOR":"NOVEDAD_NO_REGRESA"});
+        }
         J.forzado=true;save();cerrarSheet();render();abrirPanel(nd,irCierre);return;
       }
       save();cerrarSheet();buzz();render();abrirPanel(nd);
@@ -653,53 +742,81 @@ function irCierre(){
   if(J.abierto&&!J.forzado){toast("Cierra primero el tramo abierto");return}
   $("c-res").innerHTML=[["Placa",J.placa],["Barrio",J.barrio],["Tramos",J.tramos.length],["ML aptos",mlTotal()+" ML"],["Agua",J.m3+" m³"],["Novedades",J.novedades.length]].map(x=>`<div class="row"><span>${x[0]}</span><b>${esc(x[1])}</b></div>`).join("");
   $("c-insp").value="";$("c-obs").value="";$("c-err").classList.remove("on");
-  $("btn-volver").style.display=J.forzado?"none":"block";show("s-ci");
+  $("btn-volver").style.display=J.forzado?"none":"block";
+  show("s-ci");
 }
-$("btn-cerrar").onclick=async()=>{if(!J)return;
+$("btn-cerrar").onclick=async()=>{
+  if(!J)return;
   if(J.abierto){toast("Cierra primero el tramo abierto ("+J.abierto.n+")");return}
-  irCierre()};
+  irCierre();
+};
 $("btn-volver").onclick=()=>{render();show("s-dash")};
 $("btn-cierre").onclick=async()=>{
   const i=$("c-insp").value;if(!i){$("c-err").classList.add("on");$("c-insp").focus();return}
   if(!await ask("Cerrar jornada","Se enviará el cierre y no se podrá modificar.","Cerrar y enviar"))return;
-  una(async()=>cierre(false,"",i,$("c-obs").value.trim()))};
+  una(async()=>cierre(false,"",i,$("c-obs").value.trim()));
+};
 async function cierre(auto,motivo,insp,obs){
-  if(!J)return;const F=J,pl=F.placa.replace(/\s+/g,""),fh=new Date(F.t0).toLocaleDateString("es-CO");
-  const folio=pl+"-CJ-"+String(++F.seq).padStart(2,"0"),ml=F.tramos.filter(t=>t.apto==="SI").reduce((s,t)=>s+t.ml,0);
+  if(!J)return;
+  const F=J,pl=F.placa.replace(/\s+/g,""),fh=new Date(F.t0).toLocaleDateString("es-CO");
+  const folio=pl+"-CJ-"+String(++F.seq).padStart(2,"0");
+  const ml=F.tramos.filter(t=>t.apto==="SI").reduce((s,t)=>s+t.ml,0);
   hito("jornadaCierre",{mlTotal:ml,m3Total:F.m3,observaciones:obs||"",automatico:auto,motivoCierre:motivo,tramoAbierto:F.abierto?F.abierto.n:"",folio},{inspector:insp||""});
   J=null;try{localStorage.removeItem(K.j)}catch(e){}
   const fotos=await idbAll();let blob=null;try{blob=pdf(F,auto,motivo,insp,obs,fotos)}catch(e){}
   FIN={blob,name:"Entrega_"+pl+"_"+new Date().toISOString().slice(0,10).replace(/-/g,"")+".pdf",
     txt:`#_Mtto_Preventivo\n${pl}|${fh}|${F.barrio.toUpperCase()}\n\n[Folio: ${folio}]\n*Cierre de jornada${auto?" (automático)":""}*\n[ML aptos: ${ml}]\n[Tramos: ${F.tramos.length}]\n[Agua: ${F.m3} m³]`+(insp?`\n[Cierra: ${insp}]`:"")};
-  cerrarSheet();$("f-msg").textContent=blob?"Cierre enviado. PDF listo para compartir":"Cierre enviado. No se pudo generar el PDF";show("s-fin");
+  cerrarSheet();
+  $("f-msg").textContent=blob?"Cierre enviado. PDF listo para compartir":"Cierre enviado. No se pudo generar el PDF";
+  show("s-fin");
 }
-function autoCerrar(){if(!J||autoCerrar.on)return;autoCerrar.on=true;
-  cierre(true,"Tope de "+MAX_H+" h sin cierre del operador","","Cierre automático por tope de "+MAX_H+" h").finally(()=>{autoCerrar.on=false;toast("Jornada cerrada y enviada por tope de "+MAX_H+" h")})}
+function autoCerrar(){
+  if(!J||autoCerrar.on)return;autoCerrar.on=true;
+  cierre(true,"Tope de "+MAX_H+" h sin cierre del operador","","Cierre automático por tope de "+MAX_H+" h").finally(()=>{autoCerrar.on=false;toast("Jornada cerrada y enviada por tope de "+MAX_H+" h")});
+}
 function reset(){
   J=null;try{localStorage.removeItem(K.j)}catch(e){}
-  tareas=[];tareaSel=null;$("placa").value="";$("tarea").innerHTML="";$("barrio").value="";ponerBT("",false,"Primero selecciona una placa...");$("ap-hint").textContent="";$("btn-ini").disabled=true;
-  $("c-obs").value="";$("c-insp").value="";cerrarSheet();show("s-ap");sync();iniciarGPS()}
-$("btn-bit").onclick=()=>{if(!J)return;const items=(J.log||[]).length?J.log.map(x=>`<div class="row"><span>${esc(x)}</span></div>`).join(""):"<p>Sin registros.</p>";sheet(`<h3>Bitácora de jornada</h3><div style="max-height:55dvh;overflow:auto">${items}</div><button class="btn sec" id="bit-cp">Copiar bitácora</button><button class="btn" onclick="cerrarSheet()">Cerrar</button>`);$("bit-cp").onclick=async()=>{const t=(J.log||[]).join("\n")||"Sin registros";toast(await copiar(t)?"Bitácora copiada":"No se pudo copiar")}};
+  tareas=[];tareaSel=null;
+  $("placa").value="";$("tarea").innerHTML="";$("barrio").value="";
+  ponerBT("",false,"Primero selecciona una placa...");
+  $("ap-hint").textContent="";$("btn-ini").disabled=true;
+  $("c-obs").value="";$("c-insp").value="";
+  cerrarSheet();show("s-ap");sync();iniciarGPS();
+}
+$("btn-bit").onclick=()=>{
+  if(!J)return;
+  const items=(J.log||[]).length?J.log.map(x=>`<div class="row"><span>${esc(x)}</span></div>`).join(""):"<p>Sin registros.</p>";
+  sheet(`<h3>Bitácora de jornada</h3><div style="max-height:55dvh;overflow:auto">${items}</div><button class="btn sec" id="bit-cp">Copiar bitácora</button><button class="btn" onclick="cerrarSheet()">Cerrar</button>`);
+  $("bit-cp").onclick=async()=>{const t=(J.log||[]).join("\n")||"Sin registros";toast(await copiar(t)?"Bitácora copiada":"No se pudo copiar")};
+};
 
 /* ---------- protecciones ---------- */
 history.pushState(null,"",location.href);
 addEventListener("popstate",()=>{history.pushState(null,"",location.href);toast("Usa los botones de la app")});
 addEventListener("beforeunload",e=>{if(J){e.preventDefault();e.returnValue=""}});
 document.addEventListener("contextmenu",e=>e.preventDefault());
-setInterval(()=>{const t=ls.get(K.t,null);
-  if(t&&t.id!==tabId&&Date.now()-t.ts<8000){$("lock").classList.add("on")}else{$("lock").classList.remove("on");ls.set(K.t,{id:tabId,ts:Date.now()})}},3000);
-addEventListener("online",()=>{sync();flush();verificarDespachados_()});
+setInterval(()=>{
+  const t=ls.get(K.t,null);
+  if(t&&t.id!==tabId&&Date.now()-t.ts<8000){$("lock").classList.add("on")}
+  else{$("lock").classList.remove("on");ls.set(K.t,{id:tabId,ts:Date.now()})}
+},3000);
+addEventListener("online",()=>{sync();flush().then(()=>verificarDespachados_())});
 addEventListener("offline",sync);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){tick();flush();verificarDespachados_()}});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){tick();flush().then(()=>verificarDespachados_())}});
 setInterval(tick,15000);
-async function iniciarGPS(){const g=await getGPS();gpsBarrio=await barrioGPS(g);if(!J&&!$("barrio").value&&!tareas.length&&$("placa").value){$("barrio").value=gpsBarrio;ponerBT(gpsBarrio,true,"Barrio detectado por GPS");validarAp()}}
+async function iniciarGPS(){
+  const g=await getGPS();gpsBarrio=await barrioGPS(g);
+  if(!J&&!$("barrio").value&&!tareas.length&&$("placa").value){
+    $("barrio").value=gpsBarrio;ponerBT(gpsBarrio,true,"Barrio detectado por GPS");validarAp();
+  }
+}
 
 /* ---------- arranque ---------- */
 ls.set(K.t,{id:tabId,ts:Date.now()});
 sync();flush();
 if(J){if(Date.now()-new Date(J.t0)>=MAX_H*3600000){autoCerrar()}else{render();show("s-dash")}}else iniciarGPS();
-/* Verificación diferida: al abrir la app, confirmar contra RAW lo que quedó pendiente. */
 setTimeout(()=>verificarDespachados_(),2500);
+programarVerificacionAutomatica_();
 </script>
 </body>
 </html>
