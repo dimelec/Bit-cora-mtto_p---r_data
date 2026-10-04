@@ -46,9 +46,13 @@ input[readonly]{opacity:.75}
 .tramo{font-size:40px;font-weight:800;letter-spacing:.04em}
 .dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 12px calc(env(safe-area-inset-bottom) + 10px);display:none;z-index:20}
 .dock.on{display:block}
-.dock>*{max-width:520px;margin-left:auto;margin-right:auto}.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.act{min-height:64px;border:1.5px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);font:inherit;font-weight:600;font-size:15px;cursor:pointer}
+.dock>*{max-width:520px;margin-left:auto;margin-right:auto}
+.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.act{min-height:64px;border:1.5px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);font:inherit;font-weight:600;font-size:15px;cursor:pointer;position:relative}
 .act:disabled{opacity:.35}
+.act.locked{opacity:.4;cursor:not-allowed}
+.act.locked::after{content:'🔒';position:absolute;top:6px;right:8px;font-size:12px;opacity:.7}
+.act .motivo{position:absolute;bottom:3px;left:0;right:0;font-size:9px;color:var(--sub);text-align:center;font-weight:500;letter-spacing:.02em}
 .chips{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .chip{min-height:56px;border:1.5px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);font:inherit;font-weight:600;cursor:pointer;padding:8px}
 .chip.sel{background:var(--acc);color:var(--on);border-color:var(--acc)}
@@ -77,6 +81,14 @@ input[readonly]{opacity:.75}
 .th{width:100%;max-height:30dvh;object-fit:contain;border-radius:12px;margin-top:12px}
 .lnk{background:none;border:0;color:var(--sub);font:inherit;font-size:13px;text-decoration:underline;padding:6px 0;cursor:pointer}
 #cv{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:14px;background:#000}
+.verify-warning{display:none;background:var(--warn);color:#fff;padding:12px 14px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:12px;cursor:pointer}
+.verify-warning.on{display:block}
+.nov-step{display:none}
+.nov-step.on{display:block}
+.nov-step-label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--sub);margin:14px 0 8px;font-weight:800;border-left:3px solid var(--warn);padding-left:8px}
+.nov-step-label:first-child{margin-top:0}
+.nov-resumen{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:12px;font-size:13px;line-height:1.55}
+.nov-resumen b{color:var(--warn)}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -99,6 +111,7 @@ input[readonly]{opacity:.75}
 
 <section class="screen" id="s-dash">
   <div id="off">Sin conexión: los registros se envían al volver la señal</div>
+  <div id="verify-warn" class="verify-warning"></div>
   <div class="top">
     <div><div class="placa" id="d-placa"></div><div class="sub" id="d-barrio"></div><div class="sub" id="d-tarea"></div></div>
     <div style="text-align:right"><div id="d-rest" style="font-weight:700"></div><div id="sync">Guardado en teléfono</div><button class="lnk" id="btn-bit">Bitácora</button></div>
@@ -114,9 +127,9 @@ input[readonly]{opacity:.75}
 </section>
 
 <div class="dock" id="dock"><div class="tools">
-  <button class="act" id="a-desob">Desobstrucción</button>
+  <button class="act locked" id="a-desob" disabled>Desobstrucción<span class="motivo">requiere tramo</span></button>
   <button class="act" id="a-m3">Carga de agua</button>
-  <button class="act" id="a-nov">Novedad</button>
+  <button class="act locked" id="a-nov" disabled>Novedad<span class="motivo">requiere tramo</span></button>
 </div><button class="btn big" id="btn-cerrar">Cerrar jornada</button></div>
 
 <section class="screen" id="s-ci">
@@ -149,7 +162,7 @@ input[readonly]{opacity:.75}
 const FORM="https://docs.google.com/forms/d/e/1FAIpQLSfERpt4S-r5oDgoAsGMDFYq-RdhOiFsszFjjPTnA_Utm3ZSVQ/formResponse";
 const API="https://script.google.com/macros/s/AKfycbwDy1V9_-gn0p4fNwVFnQJKJgYewW5ZfjmkRJpV8ckUwXzXWExAIgbuw0x-dUXORV4T/exec";
 const MAX_H=10, ML_MAX=130;
-const K={j:"mtto_j_v3",q:"mtto_q_v3",d:"mtto_d_v3",t:"mtto_tab_v3"};
+const K={j:"mtto_j_v3",q:"mtto_q_v3",d:"mtto_d_v3",v:"mtto_v_v3",t:"mtto_tab_v3",w:"mtto_w_v3"};
 const PLACAS=[["KPN 603","Vactor"],["LPK 666","Vactor"],["WOW 047","Vactor"],["GFP 750","Vactor"],["GKV 830","Succión"],["JLO 019","Succión"],["LPL301","Ingemac"],["KPN 602","Ingemac"],["THQ 592","Ingemac"],["Otras","Otras"]];
 const CAUSAS=["Mecánica/Motor","Descarga de lodos","Fuerza mayor","Factor humano"];
 const DETALLES={"Mecánica/Motor":["Hidráulica","Mecánica/Motor","Succión/Presión","Eléctrica"],"Factor humano":["Falta de personal","Relevo de cuadrilla","Seguridad/SST","Otra"]};
@@ -160,7 +173,7 @@ const uid=()=>(crypto.randomUUID?crypto.randomUUID():"a"+Date.now().toString(36)
 const hhmm=d=>new Date(d).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:true});
 const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1).toLowerCase():s;
 
-let J=ls.get(K.j,null);       // jornada viva; null = ninguna (nada se hereda)
+let J=ls.get(K.j,null);
 let busy=false, flushing=false, tareas=[], tareaSel=null, gpsBarrio="";
 const tabId=sessionStorage.getItem("mtto_tab_id")||uid();sessionStorage.setItem("mtto_tab_id",tabId);
 
@@ -171,7 +184,6 @@ function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.to
 function sheet(h){$("sheet").innerHTML=h;$("ov").classList.add("on")}
 function cerrarSheet(){$("ov").classList.remove("on")}
 function ask(t,m,ok){return new Promise(r=>{sheet(`<h3>${esc(t)}</h3><p>${esc(m)}</p><button class="btn" id="y">${esc(ok||"Confirmar")}</button><button class="btn sec" id="n">Cancelar</button>`);$("y").onclick=()=>{cerrarSheet();r(true)};$("n").onclick=()=>{cerrarSheet();r(false)}})}
-/* Una acción a la vez: bloquea toda la interfaz hasta terminar */
 async function una(fn){if(busy)return;busy=true;document.body.classList.add("ocupado");try{await fn()}catch(e){toast(e.message||"Error")}finally{setTimeout(()=>{busy=false;document.body.classList.remove("ocupado")},400)}}
 function save(){ls.set(K.j,J)}
 function log(t){J.log.push(`[${hhmm(new Date())}] ${t}`)}
@@ -229,7 +241,7 @@ $("cam-ok").onclick=()=>una(async()=>{const v=$("cv");if(!v.videoWidth||!J||!P)r
   x.fillStyle="#555";x.font="500 26px system-ui,sans-serif";x.fillText(J.placa+" · "+J.barrio+" · "+new Date().toLocaleString("es-CO",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}),45,1040);
   P.foto=c.toDataURL("image/jpeg",.82);await idbPut({folio:P.folio,titulo:P.tit,placa:J.placa,barrio:J.barrio,dataUrl:P.foto,at:new Date().toISOString()});camCerrar();pintarPanel()});
 
-/* ---------- PDF: acta de entrega de turno ---------- */
+/* ---------- PDF ---------- */
 function pdf(F,auto,motivo,insp,obs,fotos){
   const {jsPDF}=window.jspdf,W=105,H=210,M=8,U=W-2*M,d=new jsPDF({unit:"mm",format:[W,H]});
   const C=auto?[179,38,30]:[14,90,107],INK=[30,30,30],G=[110,110,110];let y=0;
@@ -262,12 +274,9 @@ function pdf(F,auto,motivo,insp,obs,fotos){
     T((t.ini?hhmm(t.ini):"")+" – "+(t.fin?hhmm(t.fin):""),M+4,y+5.5,7.5,false,G);
     if(t.obs)T(d.splitTextToSize(t.obs,U-34)[0],M+34,y+5.5,7.5,false,G);y+=12});
   const fs=(fotos||[]).slice().sort((a,b)=>a.at<b.at?-1:1);
-  // Evidencias: páginas homogéneas de 2 a 4 Polaroids. Nunca se corta un bloque.
   const grupos=[];let n=fs.length,i=0;
   while(n-i>0){const r=n-i;let k=r;
-    if(r>4){
-      if(r===5)k=2; else if(r===6)k=3; else if(r===7)k=3; else k=4;
-    }
+    if(r>4){if(r===5)k=2;else if(r===6)k=3;else if(r===7)k=3;else k=4;}
     grupos.push(fs.slice(i,i+k));i+=k;
   }
   grupos.forEach((g,gi)=>{
@@ -276,7 +285,6 @@ function pdf(F,auto,motivo,insp,obs,fotos){
     let cols=count===2?1:2, rows=Math.ceil(count/cols);
     if(count===1){cols=1;rows=1}
     const cellW=(U-gapX*(cols-1))/cols, cellH=(availH-gapY*(rows-1))/rows;
-    // Proporción de la Polaroid 900x1080; reserva pie para número/folio sin invadir otra celda.
     const maxImgW=Math.min(cellW, cellH/1.28), imgW=maxImgW, imgH=imgW*1.2;
     g.forEach((f,j)=>{
       const row=Math.floor(j/cols),col=j%cols;
@@ -381,17 +389,12 @@ $("btn-ini").onclick=()=>una(async()=>{
   buzz();render();show("s-dash");abrirPanel(D);
 });
 
-/* ---------- cola de envío A+B: entrega verificable a RAW_DATA ---------- */
+/* ---------- cola de envío con verificación diferida ---------- */
 function hito(tipo,datos,extra){
   const a={actionId:uid(),jid:J.id,tipo,datos,placa:J.placa,contratista:J.contratista,barrio:J.barrio,inspector:(extra&&extra.inspector)||"",at:new Date().toISOString()};
   const q=ls.get(K.q,[]);q.push(a);ls.set(K.q,q);sync();flush();
 }
 async function enviar(a){
-  /*
-    Google Forms es un canal de escritura sin respuesta legible desde GitHub Pages.
-    Por eso esta función SOLO despacha. No declara el hito como confirmado.
-    El actionId viaja dentro de datos para que Apps Script pueda confirmarlo en RAW_DATA.
-  */
   const b=new URLSearchParams();
   b.append("entry.698566237",a.tipo);
   b.append("entry.759456156",JSON.stringify({actionId:a.actionId,idJornadaLocal:a.jid,horaEvento:a.at,...a.datos}));
@@ -400,54 +403,80 @@ async function enviar(a){
   b.append("entry.1542290425",a.barrio);
   b.append("entry.1617359207",a.inspector);
   await fetch(FORM,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:b.toString()});
-  return true; // despachado por el navegador; todavía NO confirmado en RAW_DATA
-}
-async function confirmarRaw(a){
-  /*
-    Confirmación real por el mismo /exec que ya usa el HTML para leer Tareas.
-    Requiere en Apps Script: action=confirmarHitoRaw&actionId=...
-    Respuesta esperada: {ok:true, recibido:true}
-  */
-  try{
-    const r=await jsonp({action:"confirmarHitoRaw",actionId:a.actionId},7000);
-    return !!(r&&r.ok&&r.recibido);
-  }catch(e){return false}
 }
 async function flush(){
   if(flushing||!navigator.onLine)return;flushing=true;
   try{
-    let q=ls.get(K.q,[]),done=new Set(ls.get(K.d,[]));
+    let q=ls.get(K.q,[]);
+    let d=ls.get(K.d,[]);
+    const verIds=new Set(ls.get(K.v,[]));
     while(q.length){
       const a=q[0];
-      if(done.has(a.actionId)){q.shift();ls.set(K.q,q);continue}
+      if(verIds.has(a.actionId)){q.shift();ls.set(K.q,q);continue;}
       try{await enviar(a)}catch(e){break}
-
-      // A: el evento NO sale de pendientes hasta que RAW_DATA lo confirme.
-      let recibido=false;
-      for(let intento=0;intento<4&&!recibido;intento++){
-        await new Promise(r=>setTimeout(r,900+intento*600));
-        recibido=await confirmarRaw(a);
-      }
-      if(!recibido)break;
-
-      // B: mtto_d_v3 significa CONFIRMADO EN RAW_DATA, no simple fetch terminado.
-      done.add(a.actionId);ls.set(K.d,[...done].slice(-400));
-      q.shift();ls.set(K.q,q);sync();
+      // Mover a despachados SIN perder payload: la verificación diferida lo usará.
+      d.push(a);ls.set(K.d,d.slice(-200));
+      q.shift();ls.set(K.q,q);
+      sync();
     }
-  }finally{flushing=false;sync()}
+  }finally{flushing=false;sync();}
+}
+
+/* ---------- verificación diferida contra RAW ---------- */
+async function verificarActionId_(actionId){
+  return new Promise(resolve=>{
+    const cb="vfy_"+Date.now()+Math.floor(Math.random()*1e4);
+    const s=document.createElement("script");
+    let t=setTimeout(()=>{fin();resolve(false)},5000);
+    const fin=()=>{clearTimeout(t);try{delete window[cb]}catch(e){window[cb]=undefined}s.remove()};
+    window[cb]=d=>{fin();resolve(!!(d&&d.ok&&d.recibido))};
+    s.onerror=()=>{fin();resolve(false)};
+    s.src=API+"?"+new URLSearchParams({action:"confirmarHitoRaw",actionId:actionId,callback:cb,_:Date.now()});
+    document.head.appendChild(s);
+  });
+}
+async function verificarDespachados_(){
+  if(!navigator.onLine)return{checked:0,missed:0};
+  let d=ls.get(K.d,[]);
+  if(!d.length)return{checked:0,missed:0};
+  const verIds=new Set(ls.get(K.v,[]));
+  const sobrevivientes=[];
+  let missed=0,checked=0;
+
+  for(const a of d){
+    if(checked>=15){sobrevivientes.push(a);continue;}
+    if(verIds.has(a.actionId)){continue;}
+    checked++;
+    const ok=await verificarActionId_(a.actionId);
+    if(ok){verIds.add(a.actionId);}
+    else{sobrevivientes.push(a);missed++;}
+  }
+  ls.set(K.v,[...verIds].slice(-400));
+  ls.set(K.d,sobrevivientes.slice(-200));
+
+  if(missed>0)mostrarAvisoVerificacion_(missed);
+  else ocultarAvisoVerificacion_();
+  return{checked,missed};
+}
+function mostrarAvisoVerificacion_(n){
+  const el=$("verify-warn");if(!el)return;
+  el.textContent="⚠️ "+n+" evento"+(n===1?"":"s")+" aún no confirmado"+(n===1?"":"s")+" en el servidor. Toca para reintentar verificación.";
+  el.classList.add("on");
+  el.onclick=async()=>{
+    el.classList.remove("on");
+    toast("Verificando…");
+    await verificarDespachados_();
+  };
+}
+function ocultarAvisoVerificacion_(){
+  const el=$("verify-warn");if(el){el.classList.remove("on");el.onclick=null;}
 }
 function sync(){
-  const n=ls.get(K.q,[]).length,e=$("sync"),enLinea=navigator.onLine;
-  if(n){
-    e.textContent=`Guardado · ${n} pendiente${n===1?"":"s"} de confirmación`;
-    e.className="p";
-  }else if(enLinea){
-    e.textContent="Confirmado en Datos crudos";
-    e.className="";
-  }else{
-    e.textContent="Guardado en teléfono";
-    e.className="p";
-  }
+  const n=ls.get(K.q,[]).length,d=ls.get(K.d,[]).length,e=$("sync"),enLinea=navigator.onLine;
+  if(n){e.textContent=`Guardado · ${n} pendiente${n===1?"":"s"} de envío`;e.className="p"}
+  else if(d>0&&enLinea){e.textContent=`Despachado · ${d} por verificar`;e.className=""}
+  else if(enLinea){e.textContent="Confirmado en servidor";e.className=""}
+  else{e.textContent="Guardado en teléfono";e.className="p"}
   $("off").style.display=enLinea?"none":"block";
 }
 
@@ -457,7 +486,18 @@ function render(){
   if(!J)return;
   $("d-placa").textContent=J.placa;$("d-barrio").textContent=J.barrio;$("d-tarea").textContent=J.tarea?"Tarea: "+J.tarea:"Sin Tarea";
   $("d-tr").textContent=J.tramos.length;$("d-ml").textContent=mlTotal();$("d-m3").textContent=J.m3;
-  $("a-desob").disabled=!J.abierto;
+
+  // ===== Máquina de estados visual A+B =====
+  const hayTramo=!!J.abierto;
+  ["a-desob","a-nov"].forEach(id=>{
+    const b=$(id);if(!b)return;
+    b.disabled=!hayTramo;
+    b.classList.toggle("locked",!hayTramo);
+    const m=b.querySelector(".motivo");
+    if(m)m.textContent=hayTramo?"":"requiere tramo";
+  });
+  const m3=$("a-m3");if(m3){m3.disabled=false;m3.classList.remove("locked");const m=m3.querySelector(".motivo");if(m)m.textContent="";}
+
   const bc=$("btn-cerrar");bc.textContent=J.abierto?"Cierra el tramo "+J.abierto.n+" para terminar":"Cerrar jornada";bc.classList.toggle("blk",!!J.abierto);
   $("d-ult").innerHTML=J.ultimo?`<button class="btn wa2" id="b-ult">Último mensaje ${esc(J.ultimo.folio)}: reenviar</button>`:"";
   if(J.ultimo)$("b-ult").onclick=()=>abrirPanel({...J.ultimo,foto:null,conFoto:false});
@@ -510,27 +550,102 @@ function sheetCierreTramo(){
 $("a-desob").onclick=()=>{if(!J.abierto)return;
   sheet(`<h3>Desobstrucción</h3><p>Se registra sobre el tramo abierto ${esc(J.abierto.n)}.</p><button class="btn" id="ds-ok">Registrar desobstrucción</button><button class="btn sec" onclick="cerrarSheet()">Cancelar</button>`);
   $("ds-ok").onclick=()=>una(async()=>{if(!J.abierto)return;log("Desobstrucción tramo "+J.abierto.n);save();const D=reg("desob","DE","Desobstrucción",{tramo:J.abierto.n},["Tramo: "+J.abierto.n]);cerrarSheet();buzz();abrirPanel(D)})};
+
 $("a-m3").onclick=()=>{
   sheet(`<h3>Carga de agua</h3><label for="m-v">Metros cúbicos (m³)</label><input id="m-v" type="number" inputmode="decimal" min="0" step="0.1" placeholder="Hidrante fuera de servicio: coloca 0"><div class="hint">Hidrante fuera de servicio: coloca 0.</div><div id="m-zero" style="display:none;color:var(--bad);font-weight:800;margin-top:8px">Se registrará: hidrante fuera de servicio</div><button class="btn" id="m-ok" disabled>Registrar carga</button><button class="btn sec" onclick="cerrarSheet()">Cancelar</button>`);
   $("m-v").oninput=()=>{const raw=$("m-v").value.trim(),v=Number(raw),z=raw!==""&&v===0;$("m-zero").style.display=z?"block":"none";$("m-ok").disabled=raw===""||v<0};
   $("m-ok").onclick=()=>una(async()=>{const raw=$("m-v").value.trim(),v=Number(raw);if(raw===""||v<0)return;const fuera=v===0,g=await getGPS();J.m3=Math.round((J.m3+v)*10)/10;J.cargasAgua=J.cargasAgua||[];J.cargasAgua.push({at:new Date().toISOString(),valor:v,hidranteFueraServicio:fuera,lat:g?g.lat:"",lng:g?g.lng:""});log(fuera?"Carga de agua: hidrante fuera de servicio":`Carga de agua ${v} m³`);save();const D=reg("m3","M3","Carga de agua",{valor:v,hidranteFueraServicio:fuera,lat:g?g.lat:"",lng:g?g.lng:""},fuera?["Hidrante fuera de servicio"]:["M3: "+v]);cerrarSheet();buzz();render();abrirPanel(D)})};
-let nv={c:null,r:null};
+
+/* ===== Novedad progresiva A+B ===== */
+let nv={c:null,d:null,r:null};
 $("a-nov").onclick=()=>{
-  nv={c:null,r:null};
-  sheet(`<h3>Novedad</h3><label>Causa</label><div class="chips">${CAUSAS.map((c,i)=>`<button class="chip" data-i="${i}">${esc(c)}</button>`).join("")}</div>
-  <div id="nv-r" style="display:none"><label>¿Regresa a operar?</label><div class="chips"><button class="chip" id="nv-s">Sí</button><button class="chip" id="nv-n">No</button></div></div>
-  <button class="btn" id="nv-ok" disabled>Registrar novedad</button><button class="btn sec" onclick="cerrarSheet()">Cancelar</button>`);
-  document.querySelectorAll("#sheet [data-i]").forEach(b=>b.onclick=()=>{nv.c=CAUSAS[b.dataset.i];nv.r=null;document.querySelectorAll("#sheet [data-i]").forEach(x=>x.classList.toggle("sel",x===b));$("nv-r").style.display="block";$("nv-s").classList.remove("sel");$("nv-n").classList.remove("sel","no");$("nv-ok").disabled=true});
-  $("nv-s").onclick=()=>{nv.r="SI";$("nv-s").classList.add("sel");$("nv-n").classList.remove("sel","no");$("nv-ok").disabled=false};
-  $("nv-n").onclick=()=>{nv.r="NO";$("nv-n").classList.add("sel","no");$("nv-s").classList.remove("sel");$("nv-ok").disabled=false};
-  $("nv-ok").onclick=async()=>{
-    if(!nv.c||!nv.r)return;
-    if(nv.r==="NO"&&!await ask("Regresa: NO","Se cerrará el tramo abierto como NO apto y se pasará al cierre de la jornada. No se puede deshacer.","Sí, no regresa"))return;
-    una(async()=>{const c=nv.c,r=nv.r;J.novedades.push({c,r});log(`Novedad ${c} - Regresa ${r}`);
-      const nd=reg("novedad","NV","Novedad",{causa:c,tipo:c,regresa:r},["Causa: "+c,"Regresa: "+r]);
-      if(r==="NO"){if(J.abierto){const t=J.abierto;J.tramos.push({n:t.n,apto:"NO",ml:0,obs:c,ini:t.ini,fin:new Date().toISOString()});J.abierto=null;log(`Cierre de tramo ${t.n}: NO APTO - ${c}`);hito("tramoCierre",{tramo:t.n,aptoCCTV:"NO",ml:0,observacion:c})}
-        J.forzado=true;save();cerrarSheet();abrirPanel(nd,irCierre);return}
-      save();cerrarSheet();buzz();abrirPanel(nd)})};
+  if(!J.abierto)return;
+  nv={c:null,d:null,r:null};
+  sheet(`<h3>Novedad</h3>
+    <div class="nov-step on" id="nov-s1">
+      <div class="nov-step-label">¿Qué tipo de novedad?</div>
+      <div class="chips">
+        ${CAUSAS.map((c,i)=>`<button class="chip" data-c="${i}">${esc(c)}</button>`).join("")}
+      </div>
+    </div>
+    <div class="nov-step" id="nov-s2">
+      <div class="nov-step-label">¿Qué ocurrió?</div>
+      <div class="chips" id="nov-s2-chips"></div>
+      <button class="btn sec" id="nov-s2-volver">← Volver</button>
+    </div>
+    <div class="nov-step" id="nov-s3">
+      <div class="nov-resumen" id="nov-resumen"></div>
+      <div class="nov-step-label">¿Regresa a operar?</div>
+      <div class="chips">
+        <button class="chip" id="nv-si">Sí</button>
+        <button class="chip" id="nv-no">No</button>
+      </div>
+      <button class="btn sec" id="nov-s3-volver">← Volver</button>
+    </div>
+    <div class="nov-step" id="nov-s4">
+      <div class="nov-resumen">
+        <b>Fuerza mayor.</b><br>
+        No se pregunta por detalle ni por regreso. Esta novedad conduce directamente al cierre de jornada.
+      </div>
+      <button class="btn" id="nov-fm-ok">Registrar y cerrar jornada</button>
+      <button class="btn sec" id="nov-s4-volver">← Volver</button>
+    </div>
+    <button class="btn sec" onclick="cerrarSheet()">Cancelar</button>`);
+
+  const verPaso=(n)=>{
+    ["nov-s1","nov-s2","nov-s3","nov-s4"].forEach(id=>$(id).classList.remove("on"));
+    $("nov-s"+n).classList.add("on");
+  };
+  const pintarResumen=()=>{
+    const p=[`<b>Tipo:</b> ${nv.c||"—"}`];
+    if(nv.d)p.push(`<b>Detalle:</b> ${nv.d}`);
+    $("nov-resumen").innerHTML=p.join("<br>");
+  };
+
+  // Paso 1
+  document.querySelectorAll("#sheet [data-c]").forEach(b=>b.onclick=()=>{
+    nv={c:CAUSAS[b.dataset.c],d:null,r:null};
+    document.querySelectorAll("#sheet [data-c]").forEach(x=>x.classList.toggle("sel",x===b));
+    if(nv.c==="Fuerza mayor"){verPaso(4);return}
+    if(DETALLES[nv.c]){
+      $("nov-s2-chips").innerHTML=DETALLES[nv.c].map((d,i)=>`<button class="chip" data-d="${i}">${esc(d)}</button>`).join("");
+      document.querySelectorAll("#sheet [data-d]").forEach(x=>x.onclick=()=>{
+        nv.d=DETALLES[nv.c][x.dataset.d];
+        document.querySelectorAll("#sheet [data-d]").forEach(z=>z.classList.toggle("sel",z===x));
+        pintarResumen();
+        verPaso(3);
+      });
+      verPaso(2);
+      return;
+    }
+    pintarResumen();
+    verPaso(3);
+  });
+
+  $("nov-s2-volver").onclick=()=>{nv.d=null;verPaso(1)};
+  $("nov-s3-volver").onclick=()=>{nv.r=null;if(DETALLES[nv.c])verPaso(2);else verPaso(1)};
+  $("nov-s4-volver").onclick=()=>verPaso(1);
+
+  $("nv-si").onclick=()=>{nv.r="SI";$("nv-si").classList.add("sel");$("nv-no").classList.remove("sel","no");ejecutarNovedad(false)};
+  $("nv-no").onclick=()=>{nv.r="NO";$("nv-no").classList.add("sel","no");$("nv-si").classList.remove("sel");ejecutarNovedad(false)};
+  $("nov-fm-ok").onclick=()=>ejecutarNovedad(true);
+
+  async function ejecutarNovedad(fuerza){
+    const r=fuerza?"NO":nv.r;
+    if(!fuerza && !r)return;
+    if((fuerza||r==="NO")&&!await ask(fuerza?"Fuerza mayor":"Regresa: NO","Se cerrará el tramo abierto como NO apto y se pasará al cierre de la jornada.","Continuar"))return;
+    una(async()=>{
+      const c=nv.c,d=nv.d||"";
+      J.novedades.push({c,detalle:d,r});log(`Novedad ${c}${d?" - "+d:""} - Regresa ${r}`);
+      const lineas=["Causa: "+c].concat(d?["Detalle: "+d]:[]).concat(fuerza?[]:["Regresa: "+r]);
+      const nd=reg("novedad","NV","Novedad",{causa:c,tipo:c,detalle:d,regresa:r,fuerzaMayor:fuerza},lineas);
+      if(fuerza||r==="NO"){
+        if(J.abierto){const t=J.abierto,obs=d?c+" - "+d:c;J.tramos.push({n:t.n,apto:"NO",ml:0,obs,ini:t.ini,fin:new Date().toISOString()});J.abierto=null;log(`Cierre de tramo ${t.n}: NO APTO - ${obs}`);hito("tramoCierre",{tramo:t.n,aptoCCTV:"NO",ml:0,observacion:obs,origenCierre:fuerza?"FUERZA_MAYOR":"NOVEDAD_NO_REGRESA"})}
+        J.forzado=true;save();cerrarSheet();render();abrirPanel(nd,irCierre);return;
+      }
+      save();cerrarSheet();buzz();render();abrirPanel(nd);
+    });
+  }
 };
 
 /* ---------- cierre ---------- */
@@ -560,7 +675,6 @@ async function cierre(auto,motivo,insp,obs){
 }
 function autoCerrar(){if(!J||autoCerrar.on)return;autoCerrar.on=true;
   cierre(true,"Tope de "+MAX_H+" h sin cierre del operador","","Cierre automático por tope de "+MAX_H+" h").finally(()=>{autoCerrar.on=false;toast("Jornada cerrada y enviada por tope de "+MAX_H+" h")})}
-/* Nada de la jornada anterior sobrevive: estado, formularios y selección vuelven a cero */
 function reset(){
   J=null;try{localStorage.removeItem(K.j)}catch(e){}
   tareas=[];tareaSel=null;$("placa").value="";$("tarea").innerHTML="";$("barrio").value="";ponerBT("",false,"Primero selecciona una placa...");$("ap-hint").textContent="";$("btn-ini").disabled=true;
@@ -574,8 +688,9 @@ addEventListener("beforeunload",e=>{if(J){e.preventDefault();e.returnValue=""}})
 document.addEventListener("contextmenu",e=>e.preventDefault());
 setInterval(()=>{const t=ls.get(K.t,null);
   if(t&&t.id!==tabId&&Date.now()-t.ts<8000){$("lock").classList.add("on")}else{$("lock").classList.remove("on");ls.set(K.t,{id:tabId,ts:Date.now()})}},3000);
-addEventListener("online",()=>{sync();flush()});addEventListener("offline",sync);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){tick();flush()}});
+addEventListener("online",()=>{sync();flush();verificarDespachados_()});
+addEventListener("offline",sync);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){tick();flush();verificarDespachados_()}});
 setInterval(tick,15000);
 async function iniciarGPS(){const g=await getGPS();gpsBarrio=await barrioGPS(g);if(!J&&!$("barrio").value&&!tareas.length&&$("placa").value){$("barrio").value=gpsBarrio;ponerBT(gpsBarrio,true,"Barrio detectado por GPS");validarAp()}}
 
@@ -583,6 +698,8 @@ async function iniciarGPS(){const g=await getGPS();gpsBarrio=await barrioGPS(g);
 ls.set(K.t,{id:tabId,ts:Date.now()});
 sync();flush();
 if(J){if(Date.now()-new Date(J.t0)>=MAX_H*3600000){autoCerrar()}else{render();show("s-dash")}}else iniciarGPS();
+/* Verificación diferida: al abrir la app, confirmar contra RAW lo que quedó pendiente. */
+setTimeout(()=>verificarDespachados_(),2500);
 </script>
 </body>
 </html>
