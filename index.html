@@ -13,7 +13,7 @@
     /* ==================== VARIABLES Y ESTILOS BASE ==================== */
     :root{
       --bg:#0d0f14; --card:#191c24; --card2:#212531; --line:#2d3340;
-      --text:#f5f3ff; --sub:#aaa4bd; --accent:#f97316; --accent2:#fb923c; --good:#22c55e;
+      --text:#f5f3ff; --sub:#aaa4bd; --accent:#2563eb; --accent2:#60a5fa; --good:#22c55e;
       --warn:#f59e0b; --bad:#ef4444; --radius:14px;
     }
     *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -65,7 +65,7 @@
     .top-icons{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;}
     .icon-btn{background:none; border:none; font-size:24px; cursor:pointer; padding:4px; opacity:0.7;}
     .info-discreta{text-align:right; font-size:12px; color:var(--sub);}
-    .tramo-input-highlight{animation:pulse-glow 2s ease-in-out infinite;border-color:var(--accent)!important;box-shadow:0 0 15px rgba(249,115,22,0.38);}
+    .tramo-input-highlight{animation:pulse-glow 2s ease-in-out infinite;border-color:var(--accent)!important;box-shadow:0 0 15px rgba(37,99,235,0.38);}
     @keyframes pulse-glow{0%,100%{box-shadow:0 0 10px rgba(124,58,237,0.28);}50%{box-shadow:0 0 25px rgba(124,58,237,0.65);}}
     .action-btn{padding:16px 10px;border-radius:12px;background:var(--card2);border:1px solid var(--line);color:var(--text);font-size:14px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;min-height:70px;}
     .action-btn .ic{font-size:24px;}
@@ -98,7 +98,7 @@
 
     /* ==================== PALETA POR ELEMENTO ==================== */
     :root{
-      --c-tramo:#f97316; --c-desob:#ef4444; --c-m3:#3b82f6; --c-novedad:#f59e0b;
+      --c-tramo:#2563eb; --c-desob:#ef4444; --c-m3:#3b82f6; --c-novedad:#f59e0b;
       --c-cierre:#22c55e; --c-inspector:#a855f7; --c-cctv:#06b6d4;
     }
     .sl-tramo{border-left-color:var(--c-tramo);color:var(--c-tramo);}
@@ -201,7 +201,7 @@
     .role-card-v8{border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:14px;
       padding:15px 12px;text-align:left;min-height:92px;cursor:pointer;font-family:inherit}
     .role-card-v8:active{transform:scale(.985)}
-    .role-card-v8.primary{grid-column:1/3;border-color:var(--accent);background:linear-gradient(135deg,#4a2611,#2f1b10)}
+    .role-card-v8.primary{grid-column:1/3;border-color:var(--accent);background:linear-gradient(135deg,#172554,#0f172a)}
     .role-card-v8 .r-ic{font-size:23px;display:block;margin-bottom:7px}
     .role-card-v8 b{display:block;font-size:15px}.role-card-v8 small{display:block;color:var(--sub);font-size:11px;margin-top:4px;line-height:1.3}
     .role-card-v8.primary small{color:#d8cff3}
@@ -1034,24 +1034,44 @@ async function abrirTramo(){
   const btnAcc=document.getElementById('btn-abrir-tramo');
   if(!tomarAccion_('abrirTramo',btnAcc))return;
   const nombre=document.getElementById('nuevo-tramo-nombre').value.trim();
-  const gps=await getGPS();const dir=await reverseGeocode(gps);
-  const id='t'+Date.now();
-  STATE.tramos.push({id,tramo:nombre,horaInicio:nowISO(),gps,dir,cierre:null,eventos:[]});
-  STATE.tramoActivoId=id;
-  if(!STATE.tramoCount)STATE.tramoCount={};
-  STATE.tramoCount[nombre]=(STATE.tramoCount[nombre]||0)+1;
-  if(STATE.tramoCount[nombre]>1){
-    const aviso=`⚠️ Tramo ${nombre} abierto ${STATE.tramoCount[nombre]} veces esta jornada`;
-    const idx=STATE.avisosRepeticion.findIndex(a=>a.startsWith(`⚠️ Tramo ${nombre} abierto`));
-    if(idx>=0)STATE.avisosRepeticion[idx]=aviso;else STATE.avisosRepeticion.push(aviso);
+  if(!nombre){soltarAccion_('abrirTramo',btnAcc);return;}
+
+  // El tramo no depende del GPS para existir. Primero se registra y se envía;
+  // la ubicación es evidencia complementaria y nunca debe dejar el botón cargando.
+  try{
+    const id='t'+Date.now();
+    const hora=nowISO();
+    STATE.tramos.push({id,tramo:nombre,horaInicio:hora,gps:null,dir:'',cierre:null,eventos:[]});
+    STATE.tramoActivoId=id;
+    if(!STATE.tramoCount)STATE.tramoCount={};
+    STATE.tramoCount[nombre]=(STATE.tramoCount[nombre]||0)+1;
+    if(STATE.tramoCount[nombre]>1){
+      const aviso=`⚠️ Tramo ${nombre} abierto ${STATE.tramoCount[nombre]} veces esta jornada`;
+      const idx=STATE.avisosRepeticion.findIndex(a=>a.startsWith(`⚠️ Tramo ${nombre} abierto`));
+      if(idx>=0)STATE.avisosRepeticion[idx]=aviso;else STATE.avisosRepeticion.push(aviso);
+    }
+    guardarEstado();
+
+    // Envío inmediato al Motor, sin esperar GPS ni geocodificación.
+    await enviarHitoRemoto('tramoInicio',{tramo:nombre,lat:'',lng:'',direccion:''});
+    registrarHito(`*Apertura de tramo*\n[Tramo: ${nombre}]\n[Hora: ${fmtHora(hora)}]\n[gps: pendiente/no disponible]\n[Actividad del dia #; X]`);
+
+    document.getElementById('nuevo-tramo-nombre').value="";
+    renderDashboard();
+
+    // GPS complementario en segundo plano; no bloquea la operación.
+    getGPS().then(async gps=>{
+      if(!gps)return;
+      const dir=await reverseGeocode(gps);
+      const t=STATE.tramos.find(x=>x.id===id);
+      if(t){t.gps=gps;t.dir=dir;guardarEstado();}
+    }).catch(()=>{});
+  }catch(e){
+    toast('⚠️ El tramo quedó guardado localmente; revisa sincronización.');
+  }finally{
+    soltarAccion_('abrirTramo',btnAcc);
+    document.getElementById('btn-abrir-tramo').disabled=!document.getElementById('nuevo-tramo-nombre').value.trim();
   }
-  guardarEstado();
-  const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
-  registrarHito(`*Apertura de tramo*\n[Tramo: ${nombre}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
-  enviarHitoRemoto('tramoInicio',{tramo:nombre,lat:gps?gps.lat:'',lng:gps?gps.lng:'',direccion:dir});
-  document.getElementById('nuevo-tramo-nombre').value="";document.getElementById('btn-abrir-tramo').disabled=true;
-  renderDashboard();
-  soltarAccion_('abrirTramo',btnAcc);
 }
 
 /* ==================== CIERRE DE TRAMO ==================== */
