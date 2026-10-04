@@ -300,8 +300,6 @@
 <option value="KPN 602|Ingemac">KPN 602 — Ingemac</option>
 <option value="THQ 592|Ingemac">THQ 592 — Ingemac</option>
 <option value="Otras|Otras">Otras — Otras</option>
-<option value="CCTV-1|CCTV">CCTV-1 — CCTV</option>
-<option value="CCTV-2|CCTV">CCTV-2 — CCTV</option>
 </select>
 <label>Barrio / Tarea</label>
 <select id="ap-tarea" disabled>
@@ -844,13 +842,29 @@ async function prepararTerritorioApertura_(){
   const barrioEl=document.getElementById('ap-barrio');
   const hint=document.getElementById('ap-origen-barrio');
   STATE.idTarea=null;STATE.origenBarrio=null;STATE.barrio=null;
-  barrioEl.value='';sel.disabled=true;
+  barrioEl.value='';barrioEl.style.display='';hint.style.display='';hint.textContent='';sel.disabled=true;
   sel.innerHTML='<option value="">Consultando Tareas...</option>';
   validarApertura();
   try{
     const d=await consultarTareasPorPlaca_(STATE.placa);
     if(d.contratista)STATE.contratista=d.contratista;
     if(d.tieneTareas && Array.isArray(d.tareas) && d.tareas.length){
+      if(d.tareas.length===1){
+        const t=d.tareas[0];
+        STATE.idTarea=String(t.idTarea||'');
+        STATE.barrio=String(t.barrio||t.nombre||'');
+        STATE.origenBarrio='TAREA';
+        sel.innerHTML=`<option value="${STATE.idTarea.replace(/"/g,'&quot;')}" data-barrio="${STATE.barrio.replace(/"/g,'&quot;')}" selected>${STATE.barrio}</option>`;
+        sel.disabled=true;
+        barrioEl.value=STATE.barrio;
+        barrioEl.style.display='none';
+        hint.textContent='';
+        hint.style.display='none';
+        validarApertura();
+        return;
+      }
+      barrioEl.style.display='none';
+      hint.style.display='';
       sel.innerHTML='<option value="">Selecciona el barrio de trabajo...</option>'+d.tareas.map(t=>
         `<option value="${String(t.idTarea||'').replace(/"/g,'&quot;')}" data-barrio="${String(t.barrio||'').replace(/"/g,'&quot;')}">${t.barrio}</option>`
       ).join('');
