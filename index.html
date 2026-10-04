@@ -1,500 +1,1854 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2563eb">
-<title>#_Mtto_Preventivo</title>
+<title>Mtto Preventivo · Operador</title>
 <style>
-:root{--bg:#eef2f2;--card:#fff;--ink:#0e1c24;--sub:#4d5d66;--line:#d3dcdf;--acc:#2563eb;--on:#fff;--ok:#127a45;--bad:#b3261e;--warn:#8a5200;--r:16px}
-@media(prefers-color-scheme:dark){:root{--bg:#0b1419;--card:#142129;--ink:#eef3f5;--sub:#9fb0b8;--line:#2a3b44;--acc:#60a5fa;--on:#06222a;--ok:#4ade80;--bad:#ff8a80;--warn:#ffc15a}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%}
-body{background:var(--bg);color:var(--ink);font:17px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;touch-action:manipulation;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
-input,select,textarea{-webkit-user-select:text;user-select:text}
-.screen{display:none;min-height:100dvh;max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px)}
-.screen.on{display:flex;flex-direction:column;gap:12px}
-#s-dash.on{padding-bottom:calc(env(safe-area-inset-bottom) + 220px)}
-h1{font-size:24px;margin:4px 0 0;letter-spacing:-.02em}
-h3{font-size:20px;margin:0 0 10px}
-p{margin:0 0 12px;color:var(--sub)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
-label{display:block;font-size:14px;font-weight:600;color:var(--sub);margin:14px 0 6px}
-label:first-child{margin-top:0}
-input,select,textarea{width:100%;min-height:56px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font:inherit;font-size:17px}
-textarea{min-height:96px}
-input:focus,select:focus,textarea:focus{outline:3px solid var(--acc);outline-offset:1px}
-input[readonly]{opacity:.75}
-.hint{font-size:14px;color:var(--sub);margin-top:6px}
-.btn{width:100%;min-height:56px;border:0;border-radius:14px;background:var(--acc);color:var(--on);font:inherit;font-weight:700;font-size:17px;margin-top:12px;cursor:pointer}
-.btn:active{transform:scale(.98)}
-.btn:disabled{opacity:.4}
-.btn.sec{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
-.btn.bad{background:var(--bad);color:#fff}
-.btn:focus-visible,.chip:focus-visible,.act:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
-.ocupado .btn,.ocupado .act,.ocupado .chip{pointer-events:none;opacity:.55}
-.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.placa{font-size:28px;font-weight:800;letter-spacing:.02em}
-.sub{color:var(--sub);font-size:15px}
-.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:10px}
-.bar i{display:block;height:100%;background:var(--acc);width:0}
-.bar.late i{background:var(--warn)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
-.stat b{display:block;font-size:24px}
-.stat span{font-size:13px;color:var(--sub)}
-.tramo{font-size:40px;font-weight:800;letter-spacing:.04em}
-.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 12px calc(env(safe-area-inset-bottom) + 10px);display:none;z-index:20}
-.dock.on{display:block}
-.dock>*{max-width:520px;margin-left:auto;margin-right:auto}.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.act{min-height:64px;border:1.5px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);font:inherit;font-weight:600;font-size:15px;cursor:pointer}
-.act:disabled{opacity:.35}
-.chips{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.chip{min-height:56px;border:1.5px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);font:inherit;font-weight:600;cursor:pointer;padding:8px}
-.chip.sel{background:var(--acc);color:var(--on);border-color:var(--acc)}
-.chip.sel.no{background:var(--bad);color:#fff;border-color:var(--bad)}
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;z-index:50}
-.ov.on{display:flex}
-.sheet{background:var(--card);width:100%;max-width:520px;margin:0 auto;border-radius:22px 22px 0 0;padding:20px 16px calc(env(safe-area-inset-bottom) + 20px);max-height:90dvh;overflow:auto;animation:up .2s ease-out}
-@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
-.row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
-.row:last-child{border:0}
-.row b{text-align:right}
-.err{color:var(--bad);font-size:14px;margin-top:6px;display:none}
-.err.on{display:block}
-#toast{position:fixed;left:16px;right:16px;top:calc(env(safe-area-inset-top) + 12px);max-width:488px;margin:0 auto;background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:12px;font-size:15px;display:none;z-index:99}
-#toast.on{display:block}
-#sync{font-size:13px;color:var(--ok)}
-#sync.p{color:var(--warn)}
-#off{display:none;background:var(--bad);color:#fff;padding:6px;border-radius:8px;text-align:center;font-size:14px}
-.btn.big{min-height:64px;font-size:19px;background:var(--ink);color:var(--bg)}
-.btn.big.late{background:var(--warn);color:#fff}.btn.blk{opacity:.6}
-:root{--wa:#0f7a3d;--waT:#fff}@media(prefers-color-scheme:dark){:root{--wa:#25d366;--waT:#06220f}}
-.btn.wa{background:var(--wa);color:var(--waT);min-height:76px;font-size:21px}
-.btn.wa2{background:transparent;color:var(--wa);border:2px solid var(--wa);font-size:15px;min-height:52px;margin-top:0}
-.pega{background:var(--wa);color:var(--waT);border-radius:16px;padding:20px 14px;text-align:center;font-size:24px;font-weight:800;line-height:1.2}
-.msg{white-space:pre-wrap;font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px;max-height:22dvh;overflow:auto;margin-top:12px;-webkit-user-select:text;user-select:text}
-.th{width:100%;max-height:30dvh;object-fit:contain;border-radius:12px;margin-top:12px}
-.lnk{background:none;border:0;color:var(--sub);font:inherit;font-size:13px;text-decoration:underline;padding:6px 0;cursor:pointer}
-#cv{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:14px;background:#000}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+:root{--bg:#f3f6f7;--card:#fff;--ink:#172126;--sub:#5d6b73;--line:#d8e0e4;--acc:#2563eb;--bad:#b3261e;--ok:#1e7a45;--warn:#b36b00;--shadow:0 8px 24px rgba(0,0,0,.08)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+button,input,select,textarea{font:inherit}.app{max-width:560px;margin:auto;min-height:100dvh;padding:14px 14px calc(24px + env(safe-area-inset-bottom))}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.brand{font-weight:900;font-size:21px}.net{font-size:12px;color:var(--sub)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow);margin-bottom:12px}
+h2,h3{margin:0 0 12px}label{display:block;font-size:13px;font-weight:800;margin:12px 0 6px}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);padding:12px}
+textarea{min-height:90px;resize:vertical}.btn{width:100%;border:0;border-radius:13px;padding:14px 16px;font-weight:900;background:var(--acc);color:#fff;margin-top:10px;cursor:pointer}
+.btn.sec{background:#e8eef1;color:var(--ink)}.btn.danger{background:var(--bad)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#eef3f5;border-radius:13px;padding:12px}.stat b{display:block;font-size:20px}
+.hint,.muted{color:var(--sub);font-size:13px}.hidden{display:none!important}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.action{border:1px solid var(--line);background:#fff;border-radius:14px;padding:14px 10px;font-weight:850;min-height:58px;cursor:pointer}.action.full{grid-column:1/-1}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#eef3f5;padding:6px 9px;font-size:12px;font-weight:800}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.46);display:none;align-items:flex-end;z-index:20}
+.sheet{background:var(--card);width:100%;max-width:560px;margin:0 auto;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:92dvh;overflow:auto}
+.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{border:1px solid var(--line);border-radius:999px;padding:10px 13px;background:#fff;font-weight:800;cursor:pointer}.chip.sel{background:var(--acc);color:#fff;border-color:var(--acc)}.chip.no{background:#ffe9e7;color:#8c1d18;border-color:#efb4af}
+.msg{white-space:pre-wrap;background:#f6f8f9;border:1px solid var(--line);border-radius:13px;padding:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;max-height:42dvh;overflow:auto}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#172126;color:#fff;padding:10px 14px;border-radius:999px;font-size:13px;z-index:40;display:none}
+.bad{color:var(--bad)}.ok{color:var(--ok)}.warn{color:var(--warn)}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1417;--card:#172126;--ink:#f1f5f6;--sub:#aebbc1;--line:#344148;--acc:#60a5fa;--shadow:none}input,select,textarea,.action,.chip{background:#11191d;color:var(--ink)}.stat,.pill{background:#222e34}.btn.sec{background:#2b383e;color:#fff}.msg{background:#11191d}}
+body.ocupado button{pointer-events:none}
+.step-title{font-size:13px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;margin:4px 0 8px}
+.choice-list{display:grid;grid-template-columns:1fr;gap:8px}
+.choice-list .chip{width:100%;text-align:left;padding:12px 14px}
+.sel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.sel-head b{font-size:18px}.mini{border:0;background:none;color:var(--acc);font:inherit;font-size:13px;text-decoration:underline;padding:8px;cursor:pointer}
+.log-panel{max-height:55dvh;overflow:auto;border-top:1px solid var(--line);margin-top:8px}
+.log-item{padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.water-zero{display:none;color:var(--bad);font-weight:800;margin-top:8px}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
+<div class="app">
+  <div class="top"><div class="brand">#_Mtto_Preventivo</div><div class="net" id="net">●</div></div>
 
-<section class="screen on" id="s-ap">
-  <h1>#_Mtto_Preventivo</h1>
-  <div class="card">
+  <section id="s-open" class="card">
+    <h2>Abrir jornada</h2>
     <label for="placa">Placa</label>
-    <select id="placa"></select>
-    <label for="bt">Barrio / Tarea</label>
-    <div id="bt-wrap"><input id="bt" disabled placeholder="Primero selecciona una placa..."></div>
+    <select id="placa"><option value="">Selecciona placa...</option></select>
+
+    <label for="bt-input">Barrio / Tarea</label>
+    <div id="bt-wrap">
+      <input id="bt-input" autocomplete="off" placeholder="Primero selecciona una placa..." disabled>
+    </div>
+
     <select id="tarea" style="display:none"></select>
     <input id="barrio" type="hidden">
+
     <div class="hint" id="ap-hint"></div>
     <button class="btn" id="btn-ini" disabled>Iniciar jornada</button>
-  </div>
-</section>
+  </section>
 
-<section class="screen" id="s-dash">
-  <div id="off">Sin conexión: los registros se envían al volver la señal</div>
-  <div class="top">
-    <div><div class="placa" id="d-placa"></div><div class="sub" id="d-barrio"></div><div class="sub" id="d-tarea"></div></div>
-    <div style="text-align:right"><div id="d-rest" style="font-weight:700"></div><div id="sync">Al día</div><button class="lnk" id="btn-bit">Bitácora</button></div>
-  </div>
-  <div class="bar" id="d-bar"><i></i></div>
-  <div class="stats">
-    <div class="stat"><b id="d-tr">0</b><span>Tramos</span></div>
-    <div class="stat"><b id="d-ml">0</b><span>ML aptos</span></div>
-    <div class="stat"><b id="d-m3">0</b><span>m³ agua</span></div>
-  </div>
-  <div id="d-ult"></div>
-  <div class="card" id="d-tramo"></div>
-</section>
+  <section id="s-dash" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+        <div>
+          <div class="pill" id="d-placa"></div>
+          <h2 id="d-barrio" style="margin-top:9px"></h2>
+          <div class="muted" id="d-tarea"></div>
+        </div>
+        <div style="text-align:right">
+          <div class="muted">Tiempo restante</div>
+          <b id="d-time">--:--</b>
+          <div class="muted" id="d-sync"></div>
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:12px">
+        <div class="stat"><span>ML</span><b id="d-ml">0</b></div>
+        <div class="stat"><span>Agua</span><b id="d-m3">0</b></div>
+      </div>
+      <button class="btn sec" id="btn-bit">Bitácora</button>
+    </div>
 
-<div class="dock" id="dock"><div class="tools">
-  <button class="act" id="a-desob">Desobstrucción</button>
-  <button class="act" id="a-m3">Carga de agua</button>
-  <button class="act" id="a-nov">Novedad</button>
-</div><button class="btn big" id="btn-cerrar">Cerrar jornada</button></div>
+    <div class="card">
+      <h3>Registrar</h3>
+      <div class="actions">
+        <button class="action" id="a-tramo">Abrir tramo</button>
+        <button class="action" id="a-cierre">Cerrar tramo</button>
+        <button class="action" id="a-m3">Carga de agua</button>
+        <button class="action" id="a-nov">Novedad</button>
+        <button class="action full" id="a-desob">Desobstrucción</button>
+        <button class="action full" id="a-fin">Cerrar jornada</button>
+      </div>
+    </div>
+  </section>
+</div>
 
-<section class="screen" id="s-ci">
-  <h1>Cierre de jornada</h1>
-  <div class="card" id="c-res"></div>
-  <div class="card">
-    <label for="c-insp">Inspector que cierra</label>
-    <select id="c-insp"><option value="">Selecciona...</option><option>Marlon Ledezma</option><option>Luis Díaz</option><option>Luis Vergara</option><option>Armando Pájaro</option><option>Eider Mina</option></select>
-    <div class="err" id="c-err">Selecciona quién cierra la jornada</div>
-    <label for="c-obs">Observaciones</label>
-    <textarea id="c-obs" placeholder="Qué se hizo y qué quedó pendiente"></textarea>
-  </div>
-  <button class="btn" id="btn-cierre">Cerrar y enviar</button>
-  <button class="btn sec" id="btn-volver">Volver</button>
-</section>
-
-<section class="screen" id="s-fin">
-  <h1>Jornada cerrada</h1>
-  <div class="pega" id="f-msg"></div>
-  <button class="btn wa" id="f-sh">Compartir PDF por WhatsApp</button>
-  <button class="btn sec" id="f-dl">Descargar PDF</button>
-  <button class="btn" id="f-nv">Nueva jornada</button>
-</section>
-<div class="ov" id="cam" style="z-index:60"><div class="sheet"><video id="cv" playsinline muted autoplay></video><button class="btn" id="cam-ok">Capturar foto</button><button class="btn sec" id="cam-x">Cancelar</button></div></div>
-<div class="ov" id="ov"><div class="sheet" id="sheet"></div></div>
-<div class="ov" id="lock"><div class="sheet"><h3>App abierta en otra pestaña</h3><p>Para evitar registros duplicados, usa solo una pestaña. Cierra esta y continúa en la otra.</p></div></div>
-<div id="toast"></div>
+<div class="overlay" id="ov"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
 
 <script>
 const FORM="https://docs.google.com/forms/d/e/1FAIpQLSfERpt4S-r5oDgoAsGMDFYq-RdhOiFsszFjjPTnA_Utm3ZSVQ/formResponse";
 const API="https://script.google.com/macros/s/AKfycbwDy1V9_-gn0p4fNwVFnQJKJgYewW5ZfjmkRJpV8ckUwXzXWExAIgbuw0x-dUXORV4T/exec";
+
 const MAX_H=10, ML_MAX=130;
-const K={j:"mtto_j_v3",q:"mtto_q_v3",d:"mtto_d_v3",t:"mtto_tab_v3"};
-const PLACAS=[["KPN 603","Vactor"],["LPK 666","Vactor"],["WOW 047","Vactor"],["GFP 750","Vactor"],["GKV 830","Succión"],["JLO 019","Succión"],["LPL301","Ingemac"],["KPN 602","Ingemac"],["THQ 592","Ingemac"],["Otras","Otras"]];
+const KJ="mtto_j_v3",KQ="mtto_q_v3",KD="mtto_d_v3",KT="mtto_tab_v3";
+
+const PLACAS=[
+["KPN 603","Vactor"],["LPK 666","Vactor"],["WOW 047","Vactor"],
+["GFP 750","Vactor"],["GKV 830","Succión"],["JLO 019","Succión"],
+["LPL301","Ingemac"],["KPN 602","Ingemac"],["THQ 592","Ingemac"],
+["Otras","Otras"]
+];
+
 const CAUSAS=["Mecánica/Motor","Descarga de lodos","Fuerza mayor","Factor humano"];
-const DETALLES={"Mecánica/Motor":["Hidráulica","Mecánica/Motor","Succión/Presión","Eléctrica"],"Factor humano":["Falta de personal","Relevo de cuadrilla","Seguridad/SST","Otra"]};
-const $=id=>document.getElementById(id);
-const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const ls={get(k,f){try{const v=JSON.parse(localStorage.getItem(k));return v==null?f:v}catch(e){return f}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const uid=()=>(crypto.randomUUID?crypto.randomUUID():"a"+Date.now().toString(36)+Math.random().toString(36).slice(2,10));
-const hhmm=d=>new Date(d).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:true});
-const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1).toLowerCase():s;
 
-let J=ls.get(K.j,null);       // jornada viva; null = ninguna (nada se hereda)
-let busy=false, flushing=false, tareas=[], tareaSel=null, gpsBarrio="";
-const tabId=sessionStorage.getItem("mtto_tab_id")||uid();sessionStorage.setItem("mtto_tab_id",tabId);
-
-/* ---------- utilidades de interfaz ---------- */
-function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove("on"),2600)}
-function buzz(){try{navigator.vibrate&&navigator.vibrate(20)}catch(e){}}
-function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id===id));$("dock").classList.toggle("on",id==="s-dash");scrollTo(0,0)}
-function sheet(h){$("sheet").innerHTML=h;$("ov").classList.add("on")}
-function cerrarSheet(){$("ov").classList.remove("on")}
-function ask(t,m,ok){return new Promise(r=>{sheet(`<h3>${esc(t)}</h3><p>${esc(m)}</p><button class="btn" id="y">${esc(ok||"Confirmar")}</button><button class="btn sec" id="n">Cancelar</button>`);$("y").onclick=()=>{cerrarSheet();r(true)};$("n").onclick=()=>{cerrarSheet();r(false)}})}
-/* Una acción a la vez: bloquea toda la interfaz hasta terminar */
-async function una(fn){if(busy)return;busy=true;document.body.classList.add("ocupado");try{await fn()}catch(e){toast(e.message||"Error")}finally{setTimeout(()=>{busy=false;document.body.classList.remove("ocupado")},400)}}
-function save(){ls.set(K.j,J)}
-function log(t){J.log.push(`[${hhmm(new Date())}] ${t}`)}
-
-/* ---------- hitos: mensaje, foto polaroid, WhatsApp ---------- */
-let FIN=null,P=null,stream=null;
-const idb=()=>new Promise((r,j)=>{const q=indexedDB.open("mtto",1);q.onupgradeneeded=()=>q.result.createObjectStore("f",{keyPath:"folio"});q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error)});
-const idbPut=async o=>{try{const d=await idb();return await new Promise(r=>{const t=d.transaction("f","readwrite");t.objectStore("f").put(o);t.oncomplete=()=>r(true);t.onerror=()=>r(false)})}catch(e){return false}};
-const idbAll=async()=>{try{const d=await idb();return await new Promise(r=>{const q=d.transaction("f").objectStore("f").getAll();q.onsuccess=()=>r(q.result);q.onerror=()=>r([])})}catch(e){return[]}};
-const idbClear=async()=>{try{const d=await idb();await new Promise(r=>{const t=d.transaction("f","readwrite");t.objectStore("f").clear();t.oncomplete=()=>r();t.onerror=()=>r()})}catch(e){}};
-function copiar(t){
-  if(navigator.clipboard&&isSecureContext)return navigator.clipboard.writeText(t).then(()=>true).catch(()=>false);
-  return Promise.resolve(false);
-}
-function reg(tipo,sg,tit,datos,l,foto){
-  const pl=J.placa.replace(/\s+/g,""),folio=pl+"-"+sg+"-"+String(++J.seq).padStart(2,"0");
-  hito(tipo,{...datos,folio});
-  const msg=`#_Mtto_Preventivo\n${pl}|${new Date(J.t0).toLocaleDateString("es-CO")}|${J.barrio.toUpperCase()}\n\n[Folio: ${folio}]\n*${tit}*\n`+l.map(x=>`[${x}]`).join("\n")+`\n[Hora: ${hhmm(new Date())}]`;
-  J.msgs.push(msg);J.ultimo={folio,tit,msg};save();return{folio,tit,msg,foto:null,conFoto:foto!==false};
-}
-function abrirPanel(D,fn){P=D;P.onDone=fn||null;P.copiado=false;pintarPanel()}
-function pintarPanel(){const D=P;
-  sheet(`<div class="pega"><b>Extracto listo para WhatsApp</b><br><span class="hint">${D.copiado?"✔ Texto copiado. Ahora puedes enviarlo.":"La comunicación manual del hito queda aquí, visible y lista."}</span></div>
-  ${D.foto?`<img class="th" src="${D.foto}" alt="Polaroid ${esc(D.folio)}">`:""}
-  <div class="msg">${esc(D.msg)}</div>
-  <button class="btn wa" id="p-wa">📲 ${D.foto?"Compartir Polaroid + texto":"Enviar a WhatsApp"}</button>
-  <button class="btn" id="p-cp">📋 Copiar extracto</button>
-  ${D.conFoto?(D.foto?`<button class="btn sec" id="p-ft">📷 Repetir foto Polaroid</button>`:`<button class="btn sec" id="p-ft">📷 Añadir foto Polaroid (opcional)</button>`):""}
-  <button class="btn sec" id="p-ok">Seguir</button>`);
-  $("p-wa").onclick=()=>una(waEnviar);
-  $("p-cp").onclick=async()=>{const ok=await copiar(D.msg);D.copiado=ok;if(ok)pintarPanel();else toast("No se pudo copiar automáticamente; usa Compartir para enviar el texto")};
-  if($("p-ft"))$("p-ft").onclick=camAbrir;
-  $("p-ok").onclick=()=>{cerrarSheet();const f=D.onDone;D.onDone=null;if(f)f()};
-}
-async function waEnviar(){
-  const texto=P.msg; let f=null;
-  if(P.foto){const b=await(await fetch(P.foto)).blob();f=new File([b],P.folio+".jpg",{type:"image/jpeg"})}
-  try{
-    if(f&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:texto,title:P.folio});return}
-    if(navigator.share){await navigator.share({text:texto,title:P.folio});return}
-  }catch(e){if(e.name==="AbortError")return}
-  const ok=await copiar(texto);if(ok)toast("Extracto copiado. Se abrirá WhatsApp para pegarlo");
-  window.open("https://wa.me/?text="+encodeURIComponent(texto),"_blank");
-}
-async function camAbrir(){$("cam").classList.add("on");
-  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}},audio:false});$("cv").srcObject=stream;await $("cv").play()}
-  catch(e){camCerrar();toast("No se pudo abrir la cámara")}}
-function camCerrar(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$("cam").classList.remove("on")}
-$("cam-x").onclick=camCerrar;
-$("cam-ok").onclick=()=>una(async()=>{const v=$("cv");if(!v.videoWidth||!J||!P)return;
-  const c=document.createElement("canvas");c.width=900;c.height=1080;const x=c.getContext("2d"),s=Math.min(v.videoWidth,v.videoHeight);
-  x.fillStyle="#fff";x.fillRect(0,0,900,1080);x.drawImage(v,(v.videoWidth-s)/2,(v.videoHeight-s)/2,s,s,45,45,810,810);
-  x.fillStyle="#111";x.font="600 30px system-ui,sans-serif";x.fillText(P.tit.toUpperCase(),45,910);
-  x.font="800 64px system-ui,sans-serif";x.fillText(P.folio,45,985);
-  x.fillStyle="#555";x.font="500 26px system-ui,sans-serif";x.fillText(J.placa+" · "+J.barrio+" · "+new Date().toLocaleString("es-CO",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}),45,1040);
-  P.foto=c.toDataURL("image/jpeg",.82);await idbPut({folio:P.folio,titulo:P.tit,placa:J.placa,barrio:J.barrio,dataUrl:P.foto,at:new Date().toISOString()});camCerrar();pintarPanel()});
-
-/* ---------- PDF: acta de entrega de turno ---------- */
-function pdf(F,auto,motivo,insp,obs,fotos){
-  const {jsPDF}=window.jspdf,W=105,H=210,M=8,U=W-2*M,d=new jsPDF({unit:"mm",format:[W,H]});
-  const C=auto?[179,38,30]:[14,90,107],INK=[30,30,30],G=[110,110,110];let y=0;
-  const T=(s,x,yy,sz,b,c)=>{d.setFont("helvetica",b?"bold":"normal");d.setFontSize(sz);d.setTextColor(...(c||INK));d.text(String(s),x,yy)};
-  const R=(s,yy,sz,b,c)=>{d.setFont("helvetica",b?"bold":"normal");d.setFontSize(sz);T(s,W-M-d.getTextWidth(String(s)),yy,sz,b,c)};
-  const band=(a,b)=>{d.setFillColor(...C);d.rect(0,0,W,16,"F");T(a,M,10,13,true,[255,255,255]);if(b)R(b,10,12,true,[255,255,255])};
-  const fin=new Date(),ok=F.tramos.filter(t=>t.apto==="SI"),ml=ok.reduce((s,t)=>s+t.ml,0),min=Math.round((fin-new Date(F.t0))/60000);
-  band(auto?"CIERRE AUTOMÁTICO":"ENTREGA DE TURNO",F.placa.toUpperCase());
-  y=24;T(F.barrio+(F.tarea?" · "+F.tarea:""),M,y,10,true);y+=5;
-  T(F.contratista+" · "+new Date(F.t0).toLocaleDateString("es-CO")+" · "+hhmm(F.t0)+" a "+hhmm(fin)+" ("+Math.floor(min/60)+" h "+String(min%60).padStart(2,"0")+" min)",M,y,7.5,false,G);y+=10;
-  T(ml+" ML aptos",M,y,22,true,C);y+=7;
-  T(ok.length+" tramos aptos · "+(F.tramos.length-ok.length)+" no aptos · "+F.m3+" m³ agua",M,y,8.5,false,G);y+=9;
-  d.setDrawColor(210);d.line(M,y,W-M,y);y+=6;
-  T("Pendiente para el siguiente turno",M,y,10.5,true);y+=5.5;
-  const pend=[];F.tramos.filter(t=>t.apto==="NO").forEach(t=>pend.push("Tramo "+t.n+" no apto: "+(t.obs||"sin observación")));
-  F.novedades.filter(n=>n.r==="NO").forEach(n=>pend.push("Novedad "+n.c+": no regresa"));
-  if(F.abierto)pend.push("Tramo "+F.abierto.n+" quedó abierto");
-  if(!pend.length)pend.push("Sin pendientes");
-  pend.forEach(p=>d.splitTextToSize("• "+p,U).forEach(l=>{if(y<H-62){T(l,M,y,9);y+=4.5}}));
-  if((obs||"").trim()){y+=3;T("Observaciones",M,y,10.5,true);y+=5;d.splitTextToSize(obs.trim(),U).slice(0,4).forEach(l=>{T(l,M,y,9);y+=4.5})}
-  const fy=H-40;d.setDrawColor(210);d.line(M,fy,W-M,fy);
-  T("Cierra",M,fy+6,8,false,G);T(insp||(auto?"Sin inspector (automático)":"—"),M+22,fy+6,9,true);
-  T("Hora",M,fy+12,8,false,G);T(hhmm(fin)+(auto?" · automático":""),M+22,fy+12,9,true);
-  T("Firma",M,fy+27,8,false,G);d.line(M+22,fy+27,W-M,fy+27);
-  d.addPage([W,H]);band("Tramos",String(F.tramos.length));y=26;
-  if(!F.tramos.length)T("Sin tramos registrados",M,y,9,false,G);
-  F.tramos.forEach(t=>{if(y>H-16){d.addPage([W,H]);band("Tramos (cont.)");y=26}
-    const o=t.apto==="SI",col=o?[22,163,74]:[220,38,38];d.setFillColor(...col);d.rect(M,y-4.5,1.5,10,"F");
-    T(t.n,M+4,y+1,11,true);R(o?"APTO · "+t.ml+" ML":"NO APTO",y+1,8.5,true,col);
-    T((t.ini?hhmm(t.ini):"")+" – "+(t.fin?hhmm(t.fin):""),M+4,y+5.5,7.5,false,G);
-    if(t.obs)T(d.splitTextToSize(t.obs,U-34)[0],M+34,y+5.5,7.5,false,G);y+=12});
-  const fs=(fotos||[]).slice().sort((a,b)=>a.at<b.at?-1:1);
-  // Evidencias: páginas homogéneas de 2 a 4 Polaroids. Nunca se corta un bloque.
-  const grupos=[];let n=fs.length,i=0;
-  while(n-i>0){const r=n-i;let k=r;
-    if(r>4){
-      if(r===5)k=2; else if(r===6)k=3; else if(r===7)k=3; else k=4;
-    }
-    grupos.push(fs.slice(i,i+k));i+=k;
-  }
-  grupos.forEach((g,gi)=>{
-    d.addPage([W,H]);band("Evidencias",fs.length+" foto"+(fs.length!==1?"s":""));
-    const count=g.length, top=22, bottom=10, availH=H-top-bottom, gapX=5, gapY=7;
-    let cols=count===2?1:2, rows=Math.ceil(count/cols);
-    if(count===1){cols=1;rows=1}
-    const cellW=(U-gapX*(cols-1))/cols, cellH=(availH-gapY*(rows-1))/rows;
-    // Proporción de la Polaroid 900x1080; reserva pie para número/folio sin invadir otra celda.
-    const maxImgW=Math.min(cellW, cellH/1.28), imgW=maxImgW, imgH=imgW*1.2;
-    g.forEach((f,j)=>{
-      const row=Math.floor(j/cols),col=j%cols;
-      const cx=M+col*(cellW+gapX)+cellW/2, cy=top+row*(cellH+gapY);
-      const x=cx-imgW/2, y0=cy+Math.max(0,(cellH-(imgH+8))/2);
-      try{d.addImage(f.dataUrl,"JPEG",x,y0,imgW,imgH)}catch(e){}
-      const globalIndex=grupos.slice(0,gi).reduce((a,z)=>a+z.length,0)+j+1;
-      d.setFont("helvetica","bold");d.setFontSize(7.5);d.setTextColor(...INK);
-      const lab=`Evidencia ${globalIndex} de ${fs.length} · ${f.folio}`;
-      const lw=d.getTextWidth(lab);d.text(lab,cx-lw/2,y0+imgH+5);
-    });
-  });
-  return d.output("blob");
-}
-function bajar(){const a=document.createElement("a");a.href=URL.createObjectURL(FIN.blob);a.download=FIN.name;document.body.appendChild(a);a.click();a.remove()}
-$("f-sh").onclick=()=>una(async()=>{if(!FIN||!FIN.blob)return toast("PDF no disponible");
-  const f=new File([FIN.blob],FIN.name,{type:"application/pdf"});copiar(FIN.txt);
-  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:FIN.txt});return}}catch(e){if(e.name==="AbortError")return}bajar()});
-$("f-dl").onclick=()=>{if(FIN&&FIN.blob)bajar()};
-$("f-nv").onclick=async()=>{await idbClear();FIN=null;reset()};
-
-/* ---------- ubicación ---------- */
-function getGPS(){return new Promise(r=>{if(!navigator.geolocation)return r(null);navigator.geolocation.getCurrentPosition(p=>r({lat:p.coords.latitude,lng:p.coords.longitude}),()=>r(null),{timeout:4000,maximumAge:60000})})}
-async function barrioGPS(g){if(!g)return"";try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${g.lat}&lon=${g.lng}&format=json`);const a=(await r.json()).address||{};return cap(a.suburb||a.neighbourhood||a.quarter||a.city_district||"")}catch(e){return""}}
-
-/* ---------- Motor: tareas por placa (JSONP) ---------- */
-function jsonp(params,ms){return new Promise((res,rej)=>{const cb="mtto_"+Date.now()+Math.floor(Math.random()*1e4),s=document.createElement("script");let t;
-  const fin=()=>{clearTimeout(t);try{delete window[cb]}catch(e){window[cb]=undefined}s.remove()};
-  window[cb]=d=>{fin();res(d)};s.onerror=()=>{fin();rej(new Error("sin conexión"))};
-  s.src=API+"?"+new URLSearchParams({...params,callback:cb,_:Date.now()});document.head.appendChild(s);
-  t=setTimeout(()=>{fin();rej(new Error("sin respuesta"))},ms||10000)})}
-
-/* ---------- apertura ---------- */
-$("placa").innerHTML='<option value="">Selecciona placa...</option>'+PLACAS.map(p=>`<option value="${p[0]}">${p[0]} — ${p[1]}</option>`).join("");
-function validarAp(){const ok=$("placa").value&&$("barrio").value.trim()&&(!tareas.length||tareaSel);$("btn-ini").disabled=!ok}
-$("placa").onchange=async()=>{
-  tareas=[];tareaSel=null;$("tarea-box").style.display="none";$("barrio").readOnly=false;$("barrio").value="";$("ap-hint").textContent="";validarAp();
-  const p=$("placa").value;if(!p)return;
-  $("ap-hint").textContent="Consultando programación...";
-  try{
-    const d=await jsonp({action:"tareasPorPlaca",placa:p,fecha:new Date().toISOString().slice(0,10)});
-    if(d&&d.ok&&Array.isArray(d.tareas)&&d.tareas.length){
-      tareas=d.tareas;$("tarea-box").style.display="block";
-      $("tarea").innerHTML=(tareas.length>1?'<option value="">Selecciona la Tarea...</option>':"")+tareas.map(t=>`<option value="${esc(t.idTarea)}">${esc(t.nombre||t.barrio)}</option>`).join("");
-      $("ap-hint").textContent="";$("barrio").readOnly=true;
-      if(tareas.length===1)elegirTarea();
-    }else{sinTarea("Sin Tarea activa para esta placa: se usa tu ubicación.")}
-  }catch(e){sinTarea("No hay conexión con el Motor: se usa tu ubicación.")}
-  validarAp();
+const DETALLES={
+  "Mecánica/Motor":["Hidráulica","Mecánica/Motor","Succión/Presión","Eléctrica"],
+  "Factor humano":["Falta de personal","Relevo de cuadrilla","Seguridad/SST","Otra"]
 };
-function sinTarea(m){tareas=[];tareaSel=null;$("ap-hint").textContent=m;$("barrio").readOnly=false;$("barrio").value=gpsBarrio;validarAp()}
-function elegirTarea(){const t=tareas.find(x=>x.idTarea===$("tarea").value);tareaSel=t||null;$("barrio").value=t?t.barrio:"";validarAp()}
-$("tarea").onchange=elegirTarea;
-$("barrio").oninput=validarAp;
-$("btn-ini").onclick=()=>una(async()=>{
-  const placa=$("placa").value,barrio=cap($("barrio").value.trim());if(!placa||!barrio||J)return;
-  const g=await getGPS(),now=new Date();await idbClear();
-  J={id:uid(),placa,contratista:(PLACAS.find(p=>p[0]===placa)||[,""])[1],barrio,idTarea:tareaSel?tareaSel.idTarea:"",tarea:tareaSel?(tareaSel.nombre||tareaSel.barrio):"",
-     origenBarrio:tareaSel?"TAREA":"GPS",t0:now.toISOString(),seq:0,msgs:[],ultimo:null,tramos:[],novedades:[],m3:0,cargasAgua:[],abierto:null,log:[],avisado:false,forzado:false};
-  const turno=(now.getHours()>=6&&now.getHours()<18)?"Diurno":"Nocturno";
-  const D=reg("jornadaInicio","AJ","Apertura de jornada",{lat:g?g.lat:"",lng:g?g.lng:"",direccion:"",turno,idTarea:J.idTarea,origenBarrio:J.origenBarrio},["Contratista: "+J.contratista,"Turno: "+turno,"Barrio: "+J.barrio].concat(J.tarea?["Tarea: "+J.tarea]:[]),false);
-  buzz();render();show("s-dash");abrirPanel(D);
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const cap=s=>s?String(s).trim().replace(/\s+/g," ").replace(/\b\w/g,c=>c.toUpperCase()):"";
+const uid=()=>Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,9);
+const now=()=>new Date();
+const fecha=d=>new Date(d).toLocaleDateString("es-CO");
+const hora=d=>new Date(d).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"});
+const save=()=>J&&localStorage.setItem(KJ,JSON.stringify(J));
+const load=()=>{try{return JSON.parse(localStorage.getItem(KJ)||"null")}catch{return null}};
+const qload=()=>{try{return JSON.parse(localStorage.getItem(KQ)||"[]")}catch{return []}};
+const qsave=q=>localStorage.setItem(KQ,JSON.stringify(q));
+const dload=()=>{try{return JSON.parse(localStorage.getItem(KD)||"[]")}catch{return []}};
+const dsave=d=>localStorage.setItem(KD,JSON.stringify(d.slice(-500)));
+const buzz=()=>navigator.vibrate&&navigator.vibrate(35);
+
+let J=load(),P=null,tareas=[],tareaSel=null,gpsBarrio="",busy=false;
+
+PLACAS.forEach(p=>{
+  const o=document.createElement("option");
+  o.value=p[0];o.textContent=p[0]+" — "+p[1];
+  $("placa").appendChild(o);
 });
 
-/* ---------- cola de envío (una sola vía, sin duplicados) ---------- */
-function hito(tipo,datos,extra){
-  const a={actionId:uid(),jid:J.id,tipo,datos,placa:J.placa,contratista:J.contratista,barrio:J.barrio,inspector:(extra&&extra.inspector)||"",at:new Date().toISOString()};
-  const q=ls.get(K.q,[]);q.push(a);ls.set(K.q,q);sync();flush();
+function toast(t){
+  const e=$("toast");e.textContent=t;e.style.display="block";
+  clearTimeout(e._t);e._t=setTimeout(()=>e.style.display="none",2200)
 }
-async function enviar(a){
-  const b=new URLSearchParams();
-  b.append("entry.698566237",a.tipo);
-  b.append("entry.759456156",JSON.stringify({actionId:a.actionId,idJornadaLocal:a.jid,horaEvento:a.at,...a.datos}));
-  b.append("entry.1958505050",a.placa);b.append("entry.1438075125",a.contratista);b.append("entry.1542290425",a.barrio);b.append("entry.1617359207",a.inspector);
-  await fetch(FORM,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:b.toString()});
-}
-async function flush(){
-  if(flushing||!navigator.onLine)return;flushing=true;
-  try{let q=ls.get(K.q,[]);const done=new Set(ls.get(K.d,[]));
-    while(q.length){const a=q[0];
-      if(!done.has(a.actionId)){try{await enviar(a)}catch(e){break}done.add(a.actionId);ls.set(K.d,[...done].slice(-400))}
-      q.shift();ls.set(K.q,q)}
-  }finally{flushing=false;sync()}
-}
-function sync(){const n=ls.get(K.q,[]).length,e=$("sync");e.textContent=n?n+" por enviar":"Al día";e.className=n?"p":"";$("off").style.display=navigator.onLine?"none":"block"}
 
-/* ---------- panel de la jornada ---------- */
-const mlTotal=()=>J.tramos.filter(t=>t.apto==="SI").reduce((s,t)=>s+t.ml,0);
-function render(){
-  if(!J)return;
-  $("d-placa").textContent=J.placa;$("d-barrio").textContent=J.barrio;$("d-tarea").textContent=J.tarea?"Tarea: "+J.tarea:"Sin Tarea";
-  $("d-tr").textContent=J.tramos.length;$("d-ml").textContent=mlTotal();$("d-m3").textContent=J.m3;
-  $("a-desob").disabled=!J.abierto;
-  const bc=$("btn-cerrar");bc.textContent=J.abierto?"Cierra el tramo "+J.abierto.n+" para terminar":"Cerrar jornada";bc.classList.toggle("blk",!!J.abierto);
-  $("d-ult").innerHTML=J.ultimo?`<button class="btn wa2" id="b-ult">Último mensaje ${esc(J.ultimo.folio)}: reenviar</button>`:"";
-  if(J.ultimo)$("b-ult").onclick=()=>abrirPanel({...J.ultimo,foto:null,conFoto:false});
-  const bx=$("d-tramo");
-  if(J.abierto){bx.innerHTML=`<div class="sub">Tramo abierto desde ${hhmm(J.abierto.ini)}</div><div class="tramo">${esc(J.abierto.n)}</div><button class="btn" id="b-ct">Cerrar tramo</button>`;$("b-ct").onclick=sheetCierreTramo}
-  else{bx.innerHTML=`<label for="n-tr">Número de tramo</label><input id="n-tr" inputmode="numeric" maxlength="6" placeholder="Hasta 6 números" autocomplete="off"><button class="btn" id="b-at" disabled>Abrir tramo</button>`;
-    $("n-tr").oninput=e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,6);$("b-at").disabled=!e.target.value};$("b-at").onclick=abrirTramo}
-  tick();
+async function una(fn){
+  if(busy)return;
+  busy=true;
+  document.body.classList.add("ocupado");
+  try{await fn()}
+  catch(e){console.error(e);toast("No se pudo completar. Intenta de nuevo.")}
+  finally{busy=false;document.body.classList.remove("ocupado")}
 }
-function tick(){
-  if(!J)return;const ms=MAX_H*3600000-(Date.now()-new Date(J.t0));
-  if(ms<=0){autoCerrar();return}
-  const h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000);
-  $("d-rest").textContent=`Quedan ${h} h ${String(m).padStart(2,"0")} min`;
-  const f=1-ms/(MAX_H*3600000);$("d-bar").firstElementChild.style.width=(f*100)+"%";$("d-bar").classList.toggle("late",ms<=1800000);$("btn-cerrar").classList.toggle("late",ms<=1800000);
-  if(ms<=1800000&&!J.avisado){J.avisado=true;save();toast("Quedan 30 min: cierra la jornada")}
+
+function show(id){
+  ["s-open","s-dash"].forEach(x=>$(x).classList.toggle("hidden",x!==id))
+}
+
+function sheet(h){
+  $("sheet").innerHTML=h;
+  $("ov").style.display="flex"
+}
+
+function cerrarSheet(){
+  $("ov").style.display="none";
+  $("sheet").innerHTML=""
+}
+
+function ask(t,b,ok="Continuar"){
+  return new Promise(res=>{
+    sheet(`<h3>${esc(t)}</h3><p>${esc(b)}</p>
+    <button class="btn danger" id="ask-ok">${esc(ok)}</button>
+    <button class="btn sec" id="ask-no">Cancelar</button>`);
+    $("ask-ok").onclick=()=>{cerrarSheet();res(true)};
+    $("ask-no").onclick=()=>{cerrarSheet();res(false)}
+  })
+}
+
+function log(t){
+  if(!J)return;
+  J.log=J.log||[];
+  J.log.push(`${hora(new Date())} · ${t}`);
+  save()
+}
+
+function jsonp(params){
+  return new Promise((resolve,reject)=>{
+    const cb="cb_"+uid().replace(/-/g,"_");
+    const s=document.createElement("script");
+    const timer=setTimeout(()=>{
+      cleanup();
+      reject(new Error("timeout"))
+    },9000);
+
+    function cleanup(){
+      clearTimeout(timer);
+      delete window[cb];
+      s.remove()
+    }
+
+    window[cb]=d=>{cleanup();resolve(d)};
+    s.onerror=()=>{cleanup();reject(new Error("jsonp"))};
+
+    const u=new URL(API);
+    Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+    u.searchParams.set("callback",cb);
+    s.src=u.toString();
+    document.head.appendChild(s)
+  })
+}
+
+/* ---------- IndexedDB evidencia ---------- */
+
+const DBN="mtto_evidencias_v1",STORE="fotos";
+
+function idb(){
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open(DBN,1);
+    r.onupgradeneeded=()=>r.result.createObjectStore(STORE);
+    r.onsuccess=()=>res(r.result);
+    r.onerror=()=>rej(r.error)
+  })
+}
+
+async function idbSet(k,v){
+  const db=await idb();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(STORE,"readwrite");
+    tx.objectStore(STORE).put(v,k);
+    tx.oncomplete=res;
+    tx.onerror=()=>rej(tx.error)
+  })
+}
+
+async function idbGet(k){
+  const db=await idb();
+  return new Promise((res,rej)=>{
+    const r=db.transaction(STORE).objectStore(STORE).get(k);
+    r.onsuccess=()=>res(r.result||null);
+    r.onerror=()=>rej(r.error)
+  })
+}
+
+async function idbClear(){
+  const db=await idb();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(STORE,"readwrite");
+    tx.objectStore(STORE).clear();
+    tx.oncomplete=res;
+    tx.onerror=()=>rej(tx.error)
+  })
+}
+
+/* ---------- GPS ---------- */
+
+function getGPS(){
+  return new Promise(res=>{
+    if(!navigator.geolocation)return res(null);
+
+    navigator.geolocation.getCurrentPosition(
+      p=>res({
+        lat:+p.coords.latitude.toFixed(6),
+        lng:+p.coords.longitude.toFixed(6)
+      }),
+      ()=>res(null),
+      {enableHighAccuracy:false,timeout:4000,maximumAge:60000}
+    )
+  })
+}
+
+/* ---------- apertura: Barrio / Tarea único ---------- */
+
+function validarAp(){
+  const ok=$("placa").value &&
+           $("barrio").value.trim() &&
+           (!tareas.length || tareaSel);
+
+  $("btn-ini").disabled=!ok;
+}
+
+function ponerBT(valor,editable,placeholder){
+  $("bt-wrap").innerHTML=
+    `<input id="bt" autocomplete="off"
+      ${editable?"":"readonly"}
+      placeholder="${esc(placeholder||"")}"
+      value="${esc(valor||"")}">`;
+
+  $("bt").oninput=()=>{
+    $("barrio").value=$("bt").value;
+    validarAp()
+  };
+}
+
+function ponerBTLista(){
+  $("bt-wrap").innerHTML=
+    `<select id="bt">
+      <option value="">Selecciona Barrio / Tarea...</option>
+      ${tareas.map(t=>
+        `<option value="${esc(t.idTarea)}">${esc(t.nombre||t.barrio)}</option>`
+      ).join("")}
+    </select>`;
+
+  $("bt").onchange=()=>{
+    const t=tareas.find(x=>x.idTarea===$("bt").value);
+    tareaSel=t||null;
+    $("barrio").value=t?t.barrio:"";
+    validarAp()
+  };
+}
+
+$("placa").onchange=async()=>{
+  tareas=[];
+  tareaSel=null;
+  $("tarea").innerHTML="";
+  $("barrio").value="";
+  $("ap-hint").textContent="";
+  validarAp();
+
+  const p=$("placa").value;
+
+  if(!p){
+    ponerBT("",false,"Primero selecciona una placa...");
+    return
+  }
+
+  ponerBT("",false,"Consultando programación...");
+  $("ap-hint").textContent="Consultando programación...";
+
+  try{
+    const d=await jsonp({
+      action:"tareasPorPlaca",
+      placa:p,
+      fecha:new Date().toISOString().slice(0,10)
+    });
+
+    if(d&&d.ok&&Array.isArray(d.tareas)&&d.tareas.length){
+      tareas=d.tareas;
+      $("ap-hint").textContent="";
+
+      if(tareas.length===1){
+        tareaSel=tareas[0];
+        $("barrio").value=tareaSel.barrio;
+        ponerBT(tareaSel.nombre||tareaSel.barrio,false,"");
+      }else{
+        ponerBTLista();
+      }
+
+    }else if(d&&d.ok){
+      sinTarea("Sin Tarea activa: barrio detectado por GPS, editable.");
+
+    }else{
+      ponerBT("",false,"Motor no confirmó la programación");
+      $("ap-hint").textContent=
+        "No se abrirá la jornada hasta confirmar la programación.";
+    }
+
+  }catch(e){
+    ponerBT("",false,"Sin respuesta del Motor");
+    $("ap-hint").textContent=
+      "No se abrirá la jornada hasta recuperar comunicación con el Motor.";
+  }
+
+  validarAp();
+};
+
+function sinTarea(m){
+  tareas=[];
+  tareaSel=null;
+  $("ap-hint").textContent=m;
+  $("barrio").value=gpsBarrio||"";
+  ponerBT(gpsBarrio||"",true,"Barrio detectado por GPS");
+  validarAp()
+}
+
+$("btn-ini").onclick=()=>una(async()=>{
+  const placa=$("placa").value;
+  const barrio=cap($("barrio").value.trim());
+
+  if(!placa||!barrio||J)return;
+
+  const g=await getGPS();
+  const n=now();
+
+  await idbClear();
+
+  J={
+    id:uid(),
+    placa,
+    contratista:(PLACAS.find(p=>p[0]===placa)||[,""])[1],
+    barrio,
+    idTarea:tareaSel?tareaSel.idTarea:"",
+    tarea:tareaSel?(tareaSel.nombre||tareaSel.barrio):"",
+    origenBarrio:tareaSel?"TAREA":"GPS",
+    t0:n.toISOString(),
+    seq:0,
+    msgs:[],
+    ultimo:null,
+    tramos:[],
+    novedades:[],
+    m3:0,
+    cargasAgua:[],
+    abierto:null,
+    log:[],
+    avisado:false,
+    forzado:false
+  };
+
+  const turno=(n.getHours()>=6&&n.getHours()<18)?"Diurno":"Nocturno";
+
+  const D=reg(
+    "jornadaInicio",
+    "AJ",
+    "Apertura de jornada",
+    {
+      lat:g?g.lat:"",
+      lng:g?g.lng:"",
+      direccion:"",
+      turno,
+      idTarea:J.idTarea,
+      origenBarrio:J.origenBarrio
+    },
+    [
+      "Contratista: "+J.contratista,
+      "Turno: "+turno,
+      "Barrio: "+J.barrio
+    ].concat(J.tarea?["Tarea: "+J.tarea]:[]),
+    false
+  );
+
+  buzz();
+  render();
+  show("s-dash");
+  abrirPanel(D)
+});
+
+/* ---------- cola de envío ---------- */
+
+function hito(tipo,datos={}){
+  if(!J)return;
+
+  const a={
+    actionId:uid(),
+    jid:J.id,
+    tipo,
+    datos,
+    placa:J.placa,
+    contratista:J.contratista,
+    barrio:J.barrio,
+    inspector:"",
+    at:new Date().toISOString()
+  };
+
+  const q=qload();
+  q.push(a);
+  qsave(q);
+  flush()
+}
+
+async function enviar(a){
+  const f=new FormData();
+
+  f.append("entry.1000001",a.actionId);
+  f.append("entry.1000002",a.jid);
+  f.append("entry.1000003",a.at);
+  f.append("entry.1000004",a.tipo);
+  f.append("entry.1000005",a.placa);
+  f.append("entry.1000006",a.contratista);
+  f.append("entry.1000007",a.barrio);
+  f.append("entry.1000008",a.inspector||"");
+  f.append("entry.1000009",JSON.stringify(a.datos||{}));
+
+  await fetch(FORM,{
+    method:"POST",
+    mode:"no-cors",
+    body:f
+  });
+
+  return true
+}
+
+async function flush(){
+  if(!navigator.onLine)return;
+
+  const q=qload();
+  if(!q.length){
+    renderSync();
+    return
+  }
+
+  const done=dload();
+  const left=[];
+
+  for(const a of q){
+    if(done.includes(a.actionId))continue;
+
+    try{
+      await enviar(a);
+      done.push(a.actionId)
+    }catch(e){
+      left.push(a)
+    }
+  }
+
+  dsave(done);
+  qsave(left);
+  renderSync()
+}
+
+window.addEventListener("online",flush);
+window.addEventListener("offline",renderSync);
+
+/* ---------- extractos ---------- */
+
+function folio(pref){
+  J.seq=(J.seq||0)+1;
+  save();
+  return `${pref}-${String(J.seq).padStart(3,"0")}`
+}
+
+function mensaje(f,titulo,lineas=[]){
+  return [
+    `#_Mtto_Preventivo`,
+    ``,
+    `${J.placa} · ${J.barrio}`,
+    `${fecha(new Date())}`,
+    `Folio: ${f}`,
+    ``,
+    titulo.toUpperCase(),
+    ...lineas,
+    ``,
+    `Hora: ${hora(new Date())}`
+  ].join("\n")
+}
+
+function reg(tipo,pref,titulo,datos,lineas=[],foto=true){
+  const f=folio(pref);
+  const msg=mensaje(f,titulo,lineas);
+
+  J.msgs=J.msgs||[];
+  J.msgs.push(msg);
+  J.ultimo=f;
+
+  save();
+  hito(tipo,{...datos,folio:f});
+
+  return {folio:f,msg,titulo,foto}
+}
+
+/* ---------- copiado seguro ---------- */
+
+function copiar(t){
+  if(navigator.clipboard&&isSecureContext){
+    return navigator.clipboard.writeText(t)
+      .then(()=>true)
+      .catch(()=>false);
+  }
+
+  return Promise.resolve(false)
+}
+
+/* ---------- POLAROID ---------- */
+
+function cargarImagen(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+
+    r.onload=()=>{
+      const im=new Image();
+      im.onload=()=>res(im);
+      im.onerror=rej;
+      im.src=r.result
+    };
+
+    r.onerror=rej;
+    r.readAsDataURL(file)
+  })
+}
+
+async function crearPolaroid(file,D){
+  const im=await cargarImagen(file);
+
+  const W=1200;
+  const H=1500;
+  const pad=70;
+  const fotoX=pad;
+  const fotoY=pad;
+  const fotoW=W-pad*2;
+  const fotoH=1000;
+
+  const c=document.createElement("canvas");
+  c.width=W;
+  c.height=H;
+
+  const x=c.getContext("2d");
+
+  x.fillStyle="#ffffff";
+  x.fillRect(0,0,W,H);
+
+  const scale=Math.max(fotoW/im.width,fotoH/im.height);
+  const sw=fotoW/scale;
+  const sh=fotoH/scale;
+  const sx=(im.width-sw)/2;
+  const sy=(im.height-sh)/2;
+
+  x.drawImage(
+    im,
+    sx,sy,sw,sh,
+    fotoX,fotoY,fotoW,fotoH
+  );
+
+  x.fillStyle="#172126";
+  x.font="700 42px system-ui";
+  x.fillText(`${J.placa} · ${D.titulo}`,pad,1160);
+
+  x.font="600 34px system-ui";
+  x.fillText(`${J.barrio}`,pad,1220);
+
+  x.font="500 31px system-ui";
+  x.fillText(`${fecha(new Date())} · ${hora(new Date())}`,pad,1280);
+
+  x.font="700 30px system-ui";
+  x.fillText(`Folio ${D.folio}`,pad,1340);
+
+  return new Promise(res=>
+    c.toBlob(
+      b=>res(b),
+      "image/jpeg",
+      .9
+    )
+  )
+}
+
+async function blobUrl(blob){
+  return URL.createObjectURL(blob)
+}
+
+/* ---------- panel extracto ---------- */
+
+function abrirPanel(D,fn){
+  P=D;
+  P.onDone=fn||null;
+  P.copiado=false;
+  pintarPanel()
+}
+
+async function pintarPanel(){
+  if(!P)return;
+
+  const foto=await idbGet(P.folio);
+
+  sheet(`
+    <h3>✓ Hito registrado</h3>
+
+    <div class="step-title">Extracto listo para WhatsApp</div>
+
+    <div class="msg">${esc(P.msg)}</div>
+
+    <button class="btn" id="p-copy">📋 COPIAR EXTRACTO</button>
+
+    <button class="btn sec" id="p-wa">
+      ${foto ? "📲 Compartir foto + texto" : "🟢 Enviar a WhatsApp"}
+    </button>
+
+    ${P.foto ? `
+      <button class="btn sec" id="p-foto">
+        ${foto ? "📷 Ver / cambiar foto" : "📷 Añadir foto"}
+      </button>
+    ` : ""}
+
+    <button class="btn sec" id="p-ok">Seguir</button>
+  `);
+
+  $("p-copy").onclick=async()=>{
+    const ok=await copiar(P.msg);
+
+    if(ok){
+      toast("Extracto copiado");
+    }else{
+      toast("Tu teléfono no permite copiar automáticamente");
+    }
+  };
+
+  $("p-wa").onclick=async()=>{
+    const pol=await idbGet(P.folio);
+
+    if(pol && navigator.share){
+      try{
+        const file=new File(
+          [pol],
+          `${P.folio}.jpg`,
+          {type:"image/jpeg"}
+        );
+
+        if(!navigator.canShare || navigator.canShare({files:[file]})){
+          await navigator.share({
+            text:P.msg,
+            files:[file]
+          });
+          return
+        }
+      }catch(e){}
+    }
+
+    const txt=encodeURIComponent(P.msg);
+    location.href=`https://wa.me/?text=${txt}`
+  };
+
+  if(P.foto){
+    $("p-foto").onclick=()=>fotoPanel(P)
+  }
+
+  $("p-ok").onclick=()=>{
+    const fn=P.onDone;
+    P=null;
+    cerrarSheet();
+    if(fn)fn()
+  }
+}
+
+async function fotoPanel(D){
+  const actual=await idbGet(D.folio);
+  let preview="";
+
+  if(actual){
+    preview=await blobUrl(actual)
+  }
+
+  sheet(`
+    <h3>Respaldo gráfico</h3>
+
+    ${preview ? `
+      <div style="background:#eef1f2;padding:14px;border-radius:16px">
+        <img src="${preview}"
+             style="display:block;width:100%;border-radius:4px;box-shadow:0 6px 18px rgba(0,0,0,.18)">
+      </div>
+    ` : `
+      <p class="muted">
+        La foto se convertirá en una sola imagen tipo Polaroid
+        con la identificación del hito.
+      </p>
+    `}
+
+    <label for="foto-file">
+      ${actual ? "Cambiar fotografía" : "Tomar / elegir fotografía"}
+    </label>
+
+    <input id="foto-file"
+           type="file"
+           accept="image/*"
+           capture="environment">
+
+    <button class="btn sec" id="foto-volver">Volver al extracto</button>
+  `);
+
+  $("foto-file").onchange=()=>una(async()=>{
+    const f=$("foto-file").files&&$("foto-file").files[0];
+    if(!f)return;
+
+    const pol=await crearPolaroid(f,D);
+
+    if(!pol)throw new Error("No se pudo generar Polaroid");
+
+    await idbSet(D.folio,pol);
+
+    toast("Polaroid guardada");
+    abrirPanel(D,D.onDone)
+  });
+
+  $("foto-volver").onclick=()=>abrirPanel(D,D.onDone)
+}
+
+/* ---------- render ---------- */
+
+function renderSync(){
+  const n=qload().length;
+  $("d-sync").textContent=n ? `${n} pendiente${n===1?"":"s"} de envío` : "Sincronizado";
+  $("net").textContent=navigator.onLine?"● En línea":"● Sin conexión"
+}
+
+function totalML(){
+  return (J?.tramos||[]).reduce((a,t)=>a+(Number(t.ml)||0),0)
+}
+
+function render(){
+  if(!J){
+    show("s-open");
+    return
+  }
+
+  show("s-dash");
+
+  $("d-placa").textContent=J.placa;
+  $("d-barrio").textContent=J.barrio;
+  $("d-tarea").textContent=J.tarea?`Tarea: ${J.tarea}`:"Sin Tarea programada";
+  $("d-ml").textContent=totalML().toLocaleString("es-CO");
+  $("d-m3").textContent=Number(J.m3||0).toLocaleString("es-CO");
+
+  $("a-tramo").disabled=!!J.abierto;
+  $("a-cierre").disabled=!J.abierto;
+
+  renderSync();
+  tick()
 }
 
 /* ---------- tramo ---------- */
-async function abrirTramo(){
-  const n=$("n-tr").value.trim();if(!/^\d{1,6}$/.test(n)||J.abierto)return;
-  if(J.tramos.some(t=>t.n===n)&&!await ask("Tramo ya cerrado","El tramo "+n+" ya se cerró en esta jornada. ¿Registrarlo otra vez?","Sí, abrir"))return;
-  una(async()=>{const g=await getGPS();
-    J.abierto={n,ini:new Date().toISOString()};log("Apertura de tramo "+n);save();
-    const D=reg("tramoInicio","AT","Apertura de tramo",{tramo:n,lat:g?g.lat:"",lng:g?g.lng:"",direccion:""},["Tramo: "+n,"GPS: "+(g?g.lat.toFixed(4)+", "+g.lng.toFixed(4):"sin GPS")]);buzz();render();abrirPanel(D)});
-}
-let ct={a:null};
-function sheetCierreTramo(){
-  ct={a:null};
-  sheet(`<h3>Cerrar tramo ${esc(J.abierto.n)}</h3><label>¿Apto para CCTV?</label>
-  <div class="chips"><button class="chip" id="ct-si">Sí</button><button class="chip" id="ct-no">No</button></div>
-  <div id="ct-si-b" style="display:none"><label for="ct-ml">ML (1 a ${ML_MAX})</label><input id="ct-ml" type="number" inputmode="numeric" min="1" max="${ML_MAX}"></div>
-  <div id="ct-no-b" style="display:none"><label for="ct-ob">Observación</label><input id="ct-ob" placeholder="Por qué no es apto"></div>
-  <div class="err" id="ct-e">El ML debe estar entre 1 y ${ML_MAX}</div>
-  <button class="btn" id="ct-ok" disabled>Confirmar cierre</button><button class="btn sec" onclick="cerrarSheet()">Cancelar</button>`);
-  const v=()=>{let ok=false;const e=$("ct-e");e.classList.remove("on");
-    if(ct.a==="SI"){const m=Number($("ct-ml").value);ok=Number.isInteger(m)&&m>=1&&m<=ML_MAX;if($("ct-ml").value&&!ok)e.classList.add("on")}
-    else if(ct.a==="NO")ok=$("ct-ob").value.trim().length>0;
-    $("ct-ok").disabled=!ok};
-  $("ct-si").onclick=()=>{ct.a="SI";$("ct-si").classList.add("sel");$("ct-no").classList.remove("sel","no");$("ct-si-b").style.display="block";$("ct-no-b").style.display="none";v()};
-  $("ct-no").onclick=()=>{ct.a="NO";$("ct-no").classList.add("sel","no");$("ct-si").classList.remove("sel");$("ct-no-b").style.display="block";$("ct-si-b").style.display="none";v()};
-  $("ct-ml").oninput=v;$("ct-ob").oninput=v;
-  $("ct-ok").onclick=()=>una(async()=>{
-    if(!J.abierto)return;const t=J.abierto,si=ct.a==="SI",ml=si?Number($("ct-ml").value):0,ob=si?"":cap($("ct-ob").value.trim());
-    J.tramos.push({n:t.n,apto:ct.a,ml,obs:ob,ini:t.ini,fin:new Date().toISOString()});J.abierto=null;log(`Cierre de tramo ${t.n}: ${si?"APTO "+ml+" ML":"NO APTO - "+ob}`);save();
-    const D=reg("tramoCierre","CT","Cierre de tramo",{tramo:t.n,aptoCCTV:ct.a,ml,observacion:ob},["Tramo: "+t.n,"Apto CCTV: "+ct.a,si?"ML: "+ml:"Observación: "+ob]);cerrarSheet();buzz();render();abrirPanel(D)});
+
+$("a-tramo").onclick=()=>abrirTramo();
+
+function abrirTramo(){
+  sheet(`
+    <h3>Abrir tramo</h3>
+
+    <label for="tr-n">Número / identificación del tramo</label>
+    <input id="tr-n" autocomplete="off">
+
+    <button class="btn" id="tr-ok" disabled>Abrir tramo</button>
+    <button class="btn sec" onclick="cerrarSheet()">Cancelar</button>
+  `);
+
+  $("tr-n").oninput=()=>{
+    $("tr-ok").disabled=!$("tr-n").value.trim()
+  };
+
+  $("tr-ok").onclick=()=>una(async()=>{
+    const n=$("tr-n").value.trim();
+    if(!n||J.abierto)return;
+
+    const g=await getGPS();
+
+    J.abierto={
+      n,
+      ini:new Date().toISOString()
+    };
+
+    log(`Tramo ${n} abierto`);
+    save();
+
+    const D=reg(
+      "tramoInicio",
+      "TI",
+      "Apertura de tramo",
+      {
+        tramo:n,
+        lat:g?g.lat:"",
+        lng:g?g.lng:""
+      },
+      ["Tramo: "+n]
+    );
+
+    cerrarSheet();
+    buzz();
+    render();
+    abrirPanel(D)
+  })
 }
 
-/* ---------- desobstrucción, agua, novedad ---------- */
-$("a-desob").onclick=()=>{if(!J.abierto)return;
-  sheet(`<h3>Desobstrucción</h3><p>Se registra sobre el tramo abierto ${esc(J.abierto.n)}.</p><button class="btn" id="ds-ok">Registrar desobstrucción</button><button class="btn sec" onclick="cerrarSheet()">Cancelar</button>`);
-  $("ds-ok").onclick=()=>una(async()=>{if(!J.abierto)return;log("Desobstrucción tramo "+J.abierto.n);save();const D=reg("desob","DE","Desobstrucción",{tramo:J.abierto.n},["Tramo: "+J.abierto.n]);cerrarSheet();buzz();abrirPanel(D)})};
+$("a-cierre").onclick=()=>{
+  if(!J?.abierto)return;
+
+  sheet(`
+    <h3>Cerrar tramo</h3>
+
+    <div class="muted">Tramo ${esc(J.abierto.n)}</div>
+
+    <label>¿Apto CCTV?</label>
+    <div class="chips">
+      <button class="chip" id="tc-si">Sí</button>
+      <button class="chip" id="tc-no">No</button>
+    </div>
+
+    <label for="tc-ml">ML ejecutados</label>
+    <input id="tc-ml" type="number" inputmode="decimal" min="0" step="0.01">
+
+    <label for="tc-obs">Observación</label>
+    <textarea id="tc-obs"></textarea>
+
+    <button class="btn" id="tc-ok" disabled>Registrar cierre</button>
+    <button class="btn sec" onclick="cerrarSheet()">Cancelar</button>
+  `);
+
+  let apto="";
+
+  function val(){
+    $("tc-ok").disabled=!apto||$("tc-ml").value===""
+  }
+
+  $("tc-si").onclick=()=>{
+    apto="SI";
+    $("tc-si").classList.add("sel");
+    $("tc-no").classList.remove("sel","no");
+    val()
+  };
+
+  $("tc-no").onclick=()=>{
+    apto="NO";
+    $("tc-no").classList.add("sel","no");
+    $("tc-si").classList.remove("sel");
+    val()
+  };
+
+  $("tc-ml").oninput=val;
+
+  $("tc-ok").onclick=()=>una(async()=>{
+    const ml=Number($("tc-ml").value);
+    const obs=$("tc-obs").value.trim();
+
+    if(!Number.isFinite(ml)||ml<0)return;
+
+    if(ml>ML_MAX){
+      const ok=await ask(
+        "Valor alto",
+        `Se registrarán ${ml} ML. ¿Confirmas?`,
+        "Sí, registrar"
+      );
+
+      if(!ok)return
+    }
+
+    const t=J.abierto;
+
+    J.tramos.push({
+      n:t.n,
+      apto,
+      ml,
+      obs,
+      ini:t.ini,
+      fin:new Date().toISOString()
+    });
+
+    J.abierto=null;
+
+    log(`Cierre de tramo ${t.n}: ${apto==="SI"?"APTO":"NO APTO"} · ${ml} ML`);
+    save();
+
+    const D=reg(
+      "tramoCierre",
+      "TC",
+      "Cierre de tramo",
+      {
+        tramo:t.n,
+        aptoCCTV:apto,
+        ml,
+        observacion:obs
+      },
+      [
+        "Tramo: "+t.n,
+        "Apto CCTV: "+apto,
+        "ML: "+ml
+      ].concat(obs?["Observación: "+obs]:[])
+    );
+
+    cerrarSheet();
+    buzz();
+    render();
+    abrirPanel(D)
+  })
+};
+
+/* ---------- agua ---------- */
+
 $("a-m3").onclick=()=>{
-  sheet(`<h3>Carga de agua</h3><label for="m-v">Metros cúbicos (m³)</label><input id="m-v" type="number" inputmode="decimal" min="0" step="0.1" placeholder="Hidrante fuera de servicio: coloca 0"><div class="hint">Hidrante fuera de servicio: coloca 0.</div><div id="m-zero" style="display:none;color:var(--bad);font-weight:800;margin-top:8px">Se registrará: hidrante fuera de servicio</div><button class="btn" id="m-ok" disabled>Registrar carga</button><button class="btn sec" onclick="cerrarSheet()">Cancelar</button>`);
-  $("m-v").oninput=()=>{const raw=$("m-v").value.trim(),v=Number(raw),z=raw!==""&&v===0;$("m-zero").style.display=z?"block":"none";$("m-ok").disabled=raw===""||v<0};
-  $("m-ok").onclick=()=>una(async()=>{const raw=$("m-v").value.trim(),v=Number(raw);if(raw===""||v<0)return;const fuera=v===0,g=await getGPS();J.m3=Math.round((J.m3+v)*10)/10;J.cargasAgua=J.cargasAgua||[];J.cargasAgua.push({at:new Date().toISOString(),valor:v,hidranteFueraServicio:fuera,lat:g?g.lat:"",lng:g?g.lng:""});log(fuera?"Carga de agua: hidrante fuera de servicio":`Carga de agua ${v} m³`);save();const D=reg("m3","M3","Carga de agua",{valor:v,hidranteFueraServicio:fuera,lat:g?g.lat:"",lng:g?g.lng:""},fuera?["Hidrante fuera de servicio"]:["M3: "+v]);cerrarSheet();buzz();render();abrirPanel(D)})};
-let nv={c:null,r:null};
-$("a-nov").onclick=()=>{
-  nv={c:null,r:null};
-  sheet(`<h3>Novedad</h3><label>Causa</label><div class="chips">${CAUSAS.map((c,i)=>`<button class="chip" data-i="${i}">${esc(c)}</button>`).join("")}</div>
-  <div id="nv-r" style="display:none"><label>¿Regresa a operar?</label><div class="chips"><button class="chip" id="nv-s">Sí</button><button class="chip" id="nv-n">No</button></div></div>
-  <button class="btn" id="nv-ok" disabled>Registrar novedad</button><button class="btn sec" onclick="cerrarSheet()">Cancelar</button>`);
-  document.querySelectorAll("#sheet [data-i]").forEach(b=>b.onclick=()=>{nv.c=CAUSAS[b.dataset.i];nv.r=null;document.querySelectorAll("#sheet [data-i]").forEach(x=>x.classList.toggle("sel",x===b));$("nv-r").style.display="block";$("nv-s").classList.remove("sel");$("nv-n").classList.remove("sel","no");$("nv-ok").disabled=true});
-  $("nv-s").onclick=()=>{nv.r="SI";$("nv-s").classList.add("sel");$("nv-n").classList.remove("sel","no");$("nv-ok").disabled=false};
-  $("nv-n").onclick=()=>{nv.r="NO";$("nv-n").classList.add("sel","no");$("nv-s").classList.remove("sel");$("nv-ok").disabled=false};
-  $("nv-ok").onclick=async()=>{
-    if(!nv.c||!nv.r)return;
-    if(nv.r==="NO"&&!await ask("Regresa: NO","Se cerrará el tramo abierto como NO apto y se pasará al cierre de la jornada. No se puede deshacer.","Sí, no regresa"))return;
-    una(async()=>{const c=nv.c,r=nv.r;J.novedades.push({c,r});log(`Novedad ${c} - Regresa ${r}`);
-      const nd=reg("novedad","NV","Novedad",{causa:c,tipo:c,regresa:r},["Causa: "+c,"Regresa: "+r]);
-      if(r==="NO"){if(J.abierto){const t=J.abierto;J.tramos.push({n:t.n,apto:"NO",ml:0,obs:c,ini:t.ini,fin:new Date().toISOString()});J.abierto=null;log(`Cierre de tramo ${t.n}: NO APTO - ${c}`);hito("tramoCierre",{tramo:t.n,aptoCCTV:"NO",ml:0,observacion:c})}
-        J.forzado=true;save();cerrarSheet();abrirPanel(nd,irCierre);return}
-      save();cerrarSheet();buzz();abrirPanel(nd)})};
+  sheet(`
+    <h3>Carga de agua</h3>
+
+    <label for="m-v">Metros cúbicos (m³)</label>
+
+    <input id="m-v"
+           type="number"
+           inputmode="decimal"
+           min="0"
+           step="0.1"
+           placeholder="Hidrante fuera de servicio: coloca 0">
+
+    <div class="hint">Hidrante fuera de servicio: coloca 0.</div>
+
+    <div class="water-zero" id="m-zero">
+      Se registrará: hidrante fuera de servicio
+    </div>
+
+    <button class="btn" id="m-ok" disabled>Registrar carga</button>
+    <button class="btn sec" onclick="cerrarSheet()">Cancelar</button>
+  `);
+
+  $("m-v").oninput=()=>{
+    const raw=$("m-v").value.trim();
+    const v=Number(raw);
+    const cero=raw!==""&&v===0;
+
+    $("m-zero").style.display=cero?"block":"none";
+    $("m-ok").disabled=raw===""||v<0
+  };
+
+  $("m-ok").onclick=()=>una(async()=>{
+    const raw=$("m-v").value.trim();
+    const v=Number(raw);
+
+    if(raw===""||v<0)return;
+
+    const fuera=v===0;
+    const g=await getGPS();
+    const at=new Date().toISOString();
+
+    J.m3=Math.round((J.m3+v)*10)/10;
+
+    J.cargasAgua=J.cargasAgua||[];
+
+    J.cargasAgua.push({
+      at,
+      valor:v,
+      hidranteFueraServicio:fuera,
+      lat:g?g.lat:"",
+      lng:g?g.lng:""
+    });
+
+    log(
+      fuera
+        ?"Carga de agua: hidrante fuera de servicio"
+        :`Carga de agua ${v} m³`
+    );
+
+    save();
+
+    const D=reg(
+      "m3",
+      "M3",
+      "Carga de agua",
+      {
+        valor:v,
+        hidranteFueraServicio:fuera,
+        lat:g?g.lat:"",
+        lng:g?g.lng:""
+      },
+      fuera
+        ?["Hidrante fuera de servicio"]
+        :["M3: "+v]
+    );
+
+    cerrarSheet();
+    buzz();
+    render();
+    abrirPanel(D)
+  })
+};
+
+/* ---------- novedad progresiva ---------- */
+
+let nv={c:null,d:null,r:null};
+
+function novInicio(){
+  nv={c:null,d:null,r:null};
+
+  sheet(`
+    <h3>Novedad</h3>
+
+    <div class="step-title">Selecciona la causa</div>
+
+    <div class="choice-list">
+      ${CAUSAS.map((c,i)=>
+        `<button class="chip" data-c="${i}">${esc(c)}</button>`
+      ).join("")}
+    </div>
+
+    <button class="btn sec" onclick="cerrarSheet()">Cancelar</button>
+  `);
+
+  document.querySelectorAll("#sheet [data-c]").forEach(
+    b=>b.onclick=()=>novCausa(CAUSAS[Number(b.dataset.c)])
+  )
+}
+
+$("a-nov").onclick=novInicio;
+
+function novCab(c){
+  return `
+    <div class="sel-head">
+      <b>${esc(c)}</b>
+      <button class="mini" id="nv-cambiar">Cambiar</button>
+    </div>
+  `
+}
+
+function enlazarCambiar(){
+  $("nv-cambiar").onclick=novInicio
+}
+
+function novCausa(c){
+  nv.c=c;
+  nv.d=null;
+  nv.r=null;
+
+  if(c==="Fuerza mayor"){
+    novFuerzaMayor();
+    return
+  }
+
+  const ds=DETALLES[c];
+
+  if(ds&&ds.length){
+    sheet(`
+      <h3>Novedad</h3>
+
+      ${novCab(c)}
+
+      <div class="step-title">Selecciona el detalle</div>
+
+      <div class="choice-list">
+        ${ds.map((d,i)=>
+          `<button class="chip" data-d="${i}">${esc(d)}</button>`
+        ).join("")}
+      </div>
+
+      <button class="btn sec" onclick="cerrarSheet()">Cancelar</button>
+    `);
+
+    enlazarCambiar();
+
+    document.querySelectorAll("#sheet [data-d]").forEach(
+      b=>b.onclick=()=>{
+        nv.d=ds[Number(b.dataset.d)];
+        novRegresa()
+      }
+    );
+
+  }else{
+    novRegresa()
+  }
+}
+
+function novRegresa(){
+  sheet(`
+    <h3>Novedad</h3>
+
+    ${novCab(nv.c)}
+
+    ${nv.d?`<p>${esc(nv.d)}</p>`:""}
+
+    <div class="step-title">¿Regresa a operar?</div>
+
+    <div class="chips">
+      <button class="chip" id="nv-s">Sí</button>
+      <button class="chip" id="nv-n">No</button>
+    </div>
+
+    <div id="nv-fin"></div>
+
+    <button class="btn sec" onclick="cerrarSheet()">Cancelar</button>
+  `);
+
+  enlazarCambiar();
+
+  $("nv-s").onclick=()=>novRespuesta("SI");
+  $("nv-n").onclick=()=>novRespuesta("NO")
+}
+
+function novRespuesta(r){
+  nv.r=r;
+
+  $("nv-s").classList.toggle("sel",r==="SI");
+  $("nv-n").classList.toggle("sel",r==="NO");
+  $("nv-n").classList.toggle("no",r==="NO");
+
+  $("nv-fin").innerHTML=
+    `<button class="btn" id="nv-ok">Registrar novedad</button>`;
+
+  $("nv-ok").onclick=registrarNov
+}
+
+async function registrarNov(){
+  if(!nv.c||!nv.r)return;
+
+  if(
+    nv.r==="NO" &&
+    !await ask(
+      "Regresa: NO",
+      "Se cerrará el tramo abierto como NO apto y se pasará al cierre de la jornada. No se puede deshacer.",
+      "Sí, no regresa"
+    )
+  )return;
+
+  una(async()=>{
+    const c=nv.c;
+    const d=nv.d||"";
+    const r=nv.r;
+
+    J.novedades.push({c,d,r});
+
+    log(`Novedad ${c}${d?" · "+d:""} - Regresa ${r}`);
+
+    const nd=reg(
+      "novedad",
+      "NV",
+      "Novedad",
+      {
+        causa:c,
+        tipo:c,
+        detalle:d,
+        regresa:r
+      },
+      ["Causa: "+c]
+        .concat(d?["Detalle: "+d]:[])
+        .concat(["Regresa: "+r])
+    );
+
+    if(r==="NO"){
+      if(J.abierto){
+        const t=J.abierto;
+
+        J.tramos.push({
+          n:t.n,
+          apto:"NO",
+          ml:0,
+          obs:c+(d?" · "+d:""),
+          ini:t.ini,
+          fin:new Date().toISOString()
+        });
+
+        J.abierto=null;
+
+        log(`Cierre de tramo ${t.n}: NO APTO - ${c}`);
+
+        hito("tramoCierre",{
+          tramo:t.n,
+          aptoCCTV:"NO",
+          ml:0,
+          observacion:c,
+          detalle:d
+        })
+      }
+
+      J.forzado=true;
+      save();
+      cerrarSheet();
+      abrirPanel(nd,irCierre);
+      return
+    }
+
+    save();
+    cerrarSheet();
+    buzz();
+    abrirPanel(nd)
+  })
+}
+
+async function novFuerzaMayor(){
+  if(
+    !await ask(
+      "Fuerza mayor",
+      "Se registrará la novedad y se cerrará la jornada de forma inmediata, conservando la trazabilidad.",
+      "Registrar y cerrar"
+    )
+  )return;
+
+  una(async()=>{
+    const c="Fuerza mayor";
+
+    J.novedades.push({
+      c,
+      d:"",
+      r:"NO"
+    });
+
+    log("Novedad Fuerza mayor · cierre fulminante");
+
+    const nd=reg(
+      "novedad",
+      "NV",
+      "Novedad",
+      {
+        causa:c,
+        tipo:c,
+        detalle:"",
+        regresa:"NO",
+        cierreFulminante:true
+      },
+      [
+        "Causa: Fuerza mayor",
+        "Cierre fulminante"
+      ]
+    );
+
+    if(J.abierto){
+      const t=J.abierto;
+
+      J.tramos.push({
+        n:t.n,
+        apto:"NO",
+        ml:0,
+        obs:c,
+        ini:t.ini,
+        fin:new Date().toISOString()
+      });
+
+      J.abierto=null;
+
+      hito("tramoCierre",{
+        tramo:t.n,
+        aptoCCTV:"NO",
+        ml:0,
+        observacion:c,
+        origenCierre:"FUERZA_MAYOR"
+      })
+    }
+
+    J.forzado=true;
+    save();
+    cerrarSheet();
+    abrirPanel(nd,irCierre)
+  })
+}
+
+/* ---------- desobstrucción ---------- */
+
+$("a-desob").onclick=()=>{
+  sheet(`
+    <h3>Desobstrucción</h3>
+
+    <label for="des-t">Tramo / referencia</label>
+    <input id="des-t">
+
+    <label for="des-o">Observación</label>
+    <textarea id="des-o"></textarea>
+
+    <button class="btn" id="des-ok">Registrar</button>
+    <button class="btn sec" onclick="cerrarSheet()">Cancelar</button>
+  `);
+
+  $("des-ok").onclick=()=>una(async()=>{
+    const tramo=$("des-t").value.trim();
+    const obs=$("des-o").value.trim();
+
+    if(!tramo&&!obs)return;
+
+    log(`Desobstrucción${tramo?" · "+tramo:""}`);
+
+    const D=reg(
+      "desobstruccion",
+      "DS",
+      "Desobstrucción",
+      {
+        tramo,
+        observacion:obs
+      },
+      []
+        .concat(tramo?["Tramo: "+tramo]:[])
+        .concat(obs?["Observación: "+obs]:[])
+    );
+
+    save();
+    cerrarSheet();
+    buzz();
+    abrirPanel(D)
+  })
 };
 
 /* ---------- cierre ---------- */
-function irCierre(){
-  if(J.abierto&&!J.forzado){toast("Cierra primero el tramo abierto");return}
-  $("c-res").innerHTML=[["Placa",J.placa],["Barrio",J.barrio],["Tramos",J.tramos.length],["ML aptos",mlTotal()+" ML"],["Agua",J.m3+" m³"],["Novedades",J.novedades.length]].map(x=>`<div class="row"><span>${x[0]}</span><b>${esc(x[1])}</b></div>`).join("");
-  $("c-insp").value="";$("c-obs").value="";$("c-err").classList.remove("on");
-  $("btn-volver").style.display=J.forzado?"none":"block";show("s-ci");
-}
-$("btn-cerrar").onclick=async()=>{if(!J)return;
-  if(J.abierto){toast("Cierra primero el tramo abierto ("+J.abierto.n+")");return}
-  irCierre()};
-$("btn-volver").onclick=()=>{render();show("s-dash")};
-$("btn-cierre").onclick=async()=>{
-  const i=$("c-insp").value;if(!i){$("c-err").classList.add("on");$("c-insp").focus();return}
-  if(!await ask("Cerrar jornada","Se enviará el cierre y no se podrá modificar.","Cerrar y enviar"))return;
-  una(async()=>cierre(false,"",i,$("c-obs").value.trim()))};
-async function cierre(auto,motivo,insp,obs){
-  if(!J)return;const F=J,pl=F.placa.replace(/\s+/g,""),fh=new Date(F.t0).toLocaleDateString("es-CO");
-  const folio=pl+"-CJ-"+String(++F.seq).padStart(2,"0"),ml=F.tramos.filter(t=>t.apto==="SI").reduce((s,t)=>s+t.ml,0);
-  hito("jornadaCierre",{mlTotal:ml,m3Total:F.m3,observaciones:obs||"",automatico:auto,motivoCierre:motivo,tramoAbierto:F.abierto?F.abierto.n:"",folio},{inspector:insp||""});
-  J=null;try{localStorage.removeItem(K.j)}catch(e){}
-  const fotos=await idbAll();let blob=null;try{blob=pdf(F,auto,motivo,insp,obs,fotos)}catch(e){}
-  FIN={blob,name:"Entrega_"+pl+"_"+new Date().toISOString().slice(0,10).replace(/-/g,"")+".pdf",
-    txt:`#_Mtto_Preventivo\n${pl}|${fh}|${F.barrio.toUpperCase()}\n\n[Folio: ${folio}]\n*Cierre de jornada${auto?" (automático)":""}*\n[ML aptos: ${ml}]\n[Tramos: ${F.tramos.length}]\n[Agua: ${F.m3} m³]`+(insp?`\n[Cierra: ${insp}]`:"")};
-  cerrarSheet();$("f-msg").textContent=blob?"Cierre enviado. PDF listo para compartir":"Cierre enviado. No se pudo generar el PDF";show("s-fin");
-}
-function autoCerrar(){if(!J||autoCerrar.on)return;autoCerrar.on=true;
-  cierre(true,"Tope de "+MAX_H+" h sin cierre del operador","","Cierre automático por tope de "+MAX_H+" h").finally(()=>{autoCerrar.on=false;toast("Jornada cerrada y enviada por tope de "+MAX_H+" h")})}
-/* Nada de la jornada anterior sobrevive: estado, formularios y selección vuelven a cero */
-function reset(){
-  J=null;try{localStorage.removeItem(K.j)}catch(e){}
-  tareas=[];tareaSel=null;$("placa").value="";$("tarea-box").style.display="none";$("tarea").innerHTML="";$("barrio").value="";$("barrio").readOnly=false;$("ap-hint").textContent="";$("btn-ini").disabled=true;
-  $("c-obs").value="";$("c-insp").value="";cerrarSheet();show("s-ap");sync();iniciarGPS()}
-$("btn-bit").onclick=()=>{if(!J)return;const items=(J.log||[]).length?J.log.map(x=>`<div class="row"><span>${esc(x)}</span></div>`).join(""):"<p>Sin registros.</p>";sheet(`<h3>Bitácora de jornada</h3><div style="max-height:55dvh;overflow:auto">${items}</div><button class="btn sec" id="bit-cp">Copiar bitácora</button><button class="btn" onclick="cerrarSheet()">Cerrar</button>`);$("bit-cp").onclick=async()=>{const t=(J.log||[]).join("\n")||"Sin registros";toast(await copiar(t)?"Bitácora copiada":"No se pudo copiar")}};
 
-/* ---------- protecciones ---------- */
-history.pushState(null,"",location.href);
-addEventListener("popstate",()=>{history.pushState(null,"",location.href);toast("Usa los botones de la app")});
-addEventListener("beforeunload",e=>{if(J){e.preventDefault();e.returnValue=""}});
-document.addEventListener("contextmenu",e=>e.preventDefault());
-setInterval(()=>{const t=ls.get(K.t,null);
-  if(t&&t.id!==tabId&&Date.now()-t.ts<8000){$("lock").classList.add("on")}else{$("lock").classList.remove("on");ls.set(K.t,{id:tabId,ts:Date.now()})}},3000);
-addEventListener("online",()=>{sync();flush()});addEventListener("offline",sync);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){tick();flush()}});
-setInterval(tick,15000);
-async function iniciarGPS(){const g=await getGPS();gpsBarrio=await barrioGPS(g);if(!J&&!$("barrio").value&&!tareas.length){$("barrio").value=gpsBarrio;validarAp()}}
+$("a-fin").onclick=irCierre;
+
+function irCierre(){
+  if(!J)return;
+
+  sheet(`
+    <h3>Cerrar jornada</h3>
+
+    <div class="grid2">
+      <div class="stat">
+        <span>ML</span>
+        <b>${totalML().toLocaleString("es-CO")}</b>
+      </div>
+
+      <div class="stat">
+        <span>Agua</span>
+        <b>${Number(J.m3||0).toLocaleString("es-CO")}</b>
+      </div>
+    </div>
+
+    <label for="fin-obs">Observación final</label>
+    <textarea id="fin-obs"></textarea>
+
+    <button class="btn danger" id="fin-ok">Cerrar jornada</button>
+    <button class="btn sec" onclick="cerrarSheet()">Cancelar</button>
+  `);
+
+  $("fin-ok").onclick=()=>una(async()=>{
+    const obs=$("fin-obs").value.trim();
+
+    if(
+      !await ask(
+        "Cerrar jornada",
+        "La jornada quedará finalizada.",
+        "Sí, cerrar"
+      )
+    )return;
+
+    await cierre({
+      observacion:obs,
+      automatico:false,
+      tipoCierre:"MANUAL",
+      motivoCierre:"CIERRE_OPERADOR"
+    })
+  })
+}
+
+async function cierre(extra={}){
+  if(!J)return;
+
+  if(J.abierto){
+    const t=J.abierto;
+
+    J.tramos.push({
+      n:t.n,
+      apto:"NO",
+      ml:0,
+      obs:"Cierre automático por límite de jornada",
+      ini:t.ini,
+      fin:new Date().toISOString()
+    });
+
+    J.abierto=null;
+
+    hito("tramoCierre",{
+      tramo:t.n,
+      aptoCCTV:"NO",
+      ml:0,
+      observacion:"Cierre automático por límite de jornada",
+      origenCierre:extra.automatico?"AUTOMATICO_10H":"CIERRE_JORNADA"
+    })
+  }
+
+  const fin=new Date().toISOString();
+
+  log("Jornada cerrada");
+
+  const D=reg(
+    "jornadaCierre",
+    "CJ",
+    "Cierre de jornada",
+    {
+      mlTotal:totalML(),
+      m3Total:Number(J.m3||0),
+      fechaCierre:fin,
+      ...extra
+    },
+    [
+      "ML total: "+totalML(),
+      "Agua total: "+Number(J.m3||0)+" m³"
+    ],
+    false
+  );
+
+  save();
+
+  const copia=JSON.parse(JSON.stringify(J));
+
+  await generarPDF(copia);
+
+  localStorage.removeItem(KJ);
+  J=null;
+
+  cerrarSheet();
+
+  tareas=[];
+  tareaSel=null;
+
+  $("placa").value="";
+  $("tarea").innerHTML="";
+  $("barrio").value="";
+
+  ponerBT(
+    "",
+    false,
+    "Primero selecciona una placa..."
+  );
+
+  $("ap-hint").textContent="";
+  $("btn-ini").disabled=true;
+
+  show("s-open");
+
+  abrirPanelCierre(D)
+}
+
+function abrirPanelCierre(D){
+  sheet(`
+    <h3>✓ Jornada cerrada</h3>
+
+    <div class="step-title">Extracto final</div>
+
+    <div class="msg">${esc(D.msg)}</div>
+
+    <button class="btn" id="fc-copy">📋 COPIAR EXTRACTO</button>
+    <button class="btn sec" id="fc-wa">🟢 Enviar a WhatsApp</button>
+    <button class="btn sec" id="fc-ok">Finalizar</button>
+  `);
+
+  $("fc-copy").onclick=async()=>{
+    toast(
+      await copiar(D.msg)
+        ?"Extracto copiado"
+        :"Tu teléfono no permite copiar automáticamente"
+    )
+  };
+
+  $("fc-wa").onclick=()=>{
+    location.href=`https://wa.me/?text=${encodeURIComponent(D.msg)}`
+  };
+
+  $("fc-ok").onclick=()=>{
+    cerrarSheet()
+  }
+}
+
+/* ---------- PDF ---------- */
+
+function cargarJSPDF(){
+  return new Promise((res,rej)=>{
+    if(window.jspdf)return res();
+
+    const s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    s.onload=res;
+    s.onerror=rej;
+    document.head.appendChild(s)
+  })
+}
+
+async function blobDataURL(blob){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result);
+    r.onerror=rej;
+    r.readAsDataURL(blob)
+  })
+}
+
+function gruposFotos(n){
+  if(n<=0)return[];
+
+  if(n<=4)return[n];
+
+  const grupos=[];
+  let resto=n;
+
+  while(resto>0){
+    if(resto===5){
+      grupos.push(2,3);
+      break
+    }
+
+    if(resto===6){
+      grupos.push(3,3);
+      break
+    }
+
+    if(resto===7){
+      grupos.push(3,4);
+      break
+    }
+
+    if(resto===8){
+      grupos.push(4,4);
+      break
+    }
+
+    grupos.push(4);
+    resto-=4
+  }
+
+  return grupos
+}
+
+async function generarPDF(X){
+  try{
+    await cargarJSPDF();
+
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({
+      unit:"mm",
+      format:"a4",
+      orientation:"portrait"
+    });
+
+    const pw=210;
+    const ph=297;
+    const m=14;
+
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(17);
+    pdf.text("#_Mtto_Preventivo",m,18);
+
+    pdf.setFontSize(13);
+    pdf.text("Cierre de jornada",m,27);
+
+    pdf.setFont("helvetica","normal");
+    pdf.setFontSize(10);
+
+    let y=38;
+
+    const lineas=[
+      `Placa: ${X.placa}`,
+      `Contratista: ${X.contratista}`,
+      `Barrio: ${X.barrio}`,
+      X.tarea?`Tarea: ${X.tarea}`:"",
+      `Inicio: ${fecha(X.t0)} ${hora(X.t0)}`,
+      `ML total: ${(X.tramos||[]).reduce((a,t)=>a+(Number(t.ml)||0),0)}`,
+      `Agua total: ${Number(X.m3||0)} m³`,
+      `Tramos registrados: ${(X.tramos||[]).length}`,
+      `Novedades: ${(X.novedades||[]).length}`
+    ].filter(Boolean);
+
+    lineas.forEach(t=>{
+      pdf.text(t,m,y);
+      y+=6
+    });
+
+    if((X.log||[]).length){
+      y+=4;
+      pdf.setFont("helvetica","bold");
+      pdf.text("Bitácora",m,y);
+      y+=6;
+
+      pdf.setFont("helvetica","normal");
+
+      for(const l of X.log){
+        const arr=pdf.splitTextToSize(l,pw-m*2);
+
+        if(y+arr.length*5>ph-15){
+          pdf.addPage();
+          y=18
+        }
+
+        pdf.text(arr,m,y);
+        y+=arr.length*5+1
+      }
+    }
+
+    const evidencias=[];
+
+    for(const msg of X.msgs||[]){
+      const match=msg.match(/Folio:\s*([^\n]+)/);
+      if(!match)continue;
+
+      const fol=match[1].trim();
+      const b=await idbGet(fol);
+
+      if(b){
+        evidencias.push({
+          folio:fol,
+          blob:b
+        })
+      }
+    }
+
+    if(evidencias.length){
+      const grupos=gruposFotos(evidencias.length);
+      let pos=0;
+
+      for(const cant of grupos){
+        pdf.addPage();
+
+        const gap=8;
+        const top=18;
+        const bottom=15;
+        const usableW=pw-m*2;
+        const usableH=ph-top-bottom;
+
+        let cols=2;
+        let rows=cant<=2?1:2;
+
+        const cellW=(usableW-gap)/2;
+        const cellH=(usableH-gap*(rows-1))/rows;
+
+        for(let i=0;i<cant;i++){
+          const ev=evidencias[pos+i];
+          const col=i%2;
+          const row=Math.floor(i/2);
+
+          const x=m+col*(cellW+gap);
+          const yy=top+row*(cellH+gap);
+
+          const data=await blobDataURL(ev.blob);
+
+          const ratio=1200/1500;
+
+          let iw=cellW;
+          let ih=iw/ratio;
+
+          if(ih>cellH-10){
+            ih=cellH-10;
+            iw=ih*ratio
+          }
+
+          const ix=x+(cellW-iw)/2;
+          const iy=yy+4;
+
+          pdf.addImage(
+            data,
+            "JPEG",
+            ix,
+            iy,
+            iw,
+            ih,
+            undefined,
+            "FAST"
+          );
+
+          pdf.setFont("helvetica","normal");
+          pdf.setFontSize(8);
+
+          pdf.text(
+            `Evidencia ${pos+i+1} de ${evidencias.length} · ${ev.folio}`,
+            x,
+            Math.min(yy+cellH-2,iy+ih+5)
+          )
+        }
+
+        pos+=cant
+      }
+    }
+
+    pdf.save(
+      `Jornada_${String(X.placa).replace(/\s+/g,"_")}_${new Date().toISOString().slice(0,10)}.pdf`
+    );
+
+  }catch(e){
+    console.error("PDF",e);
+    toast("La jornada cerró, pero no se pudo generar el PDF")
+  }
+}
+
+/* ---------- bitácora ---------- */
+
+$("btn-bit").onclick=()=>{
+  if(!J)return;
+
+  const items=(J.log||[]).length
+    ?J.log.map(x=>`<div class="log-item">${esc(x)}</div>`).join("")
+    :`<p>Sin registros.</p>`;
+
+  sheet(`
+    <h3>Bitácora de jornada</h3>
+
+    <div class="log-panel">${items}</div>
+
+    <button class="btn sec" id="bit-cp">Copiar bitácora</button>
+    <button class="btn" onclick="cerrarSheet()">Cerrar</button>
+  `);
+
+  $("bit-cp").onclick=async()=>{
+    const t=(J.log||[]).join("\n")||"Sin registros";
+
+    toast(
+      await copiar(t)
+        ?"Bitácora copiada"
+        :"Tu teléfono no permite copiar desde aquí"
+    )
+  }
+};
+
+/* ---------- protecciones 10 h ---------- */
+
+function restante(){
+  if(!J)return 0;
+
+  const fin=new Date(J.t0).getTime()+MAX_H*3600000;
+  return fin-Date.now()
+}
+
+function tick(){
+  if(!J)return;
+
+  const r=restante();
+
+  if(r<=0){
+    $("d-time").textContent="00:00";
+    autoCierre();
+    return
+  }
+
+  const min=Math.floor(r/60000);
+  const h=Math.floor(min/60);
+  const mm=min%60;
+
+  $("d-time").textContent=
+    `${String(h).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
+
+  if(r<=30*60000&&!J.avisado){
+    J.avisado=true;
+    save();
+    toast("Quedan menos de 30 minutos de jornada")
+  }
+}
+
+async function autoCierre(){
+  if(!J||J._cerrandoAuto)return;
+
+  J._cerrandoAuto=true;
+  save();
+
+  await cierre({
+    automatico:true,
+    tipoCierre:"AUTOMATICO_10H",
+    motivoCierre:"ABANDONO_LIMITE_JORNADA"
+  })
+}
+
+setInterval(tick,30000);
 
 /* ---------- arranque ---------- */
-ls.set(K.t,{id:tabId,ts:Date.now()});
-sync();flush();
-if(J){if(Date.now()-new Date(J.t0)>=MAX_H*3600000){autoCerrar()}else{render();show("s-dash")}}else iniciarGPS();
+
+(async function init(){
+  renderSync();
+
+  if(J){
+    render();
+    show("s-dash");
+
+    if(restante()<=0){
+      autoCierre()
+    }
+
+  }else{
+    show("s-open");
+    ponerBT("",false,"Primero selecciona una placa...");
+  }
+
+  const g=await getGPS();
+
+  if(g){
+    gpsBarrio="";
+
+    if(
+      !J &&
+      !$("barrio").value &&
+      !tareas.length &&
+      $("placa").value
+    ){
+      $("barrio").value=gpsBarrio;
+      ponerBT(
+        gpsBarrio,
+        true,
+        "Barrio detectado por GPS"
+      );
+      validarAp()
+    }
+  }
+
+  flush()
+})();
 </script>
 </body>
 </html>
